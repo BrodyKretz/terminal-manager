@@ -32,3 +32,13 @@ Deferred from milestone 1 on purpose, then minors found while building it. Nothi
 11. **Fonts** load from Google Fonts like the prototype. Offline, the page falls back to the system
     UI font and SF Mono. Vendoring Instrument Sans and JetBrains Mono (both OFL) would make it exact.
 12. **Window position** is remembered by AppKit's autosave; no per-display handling yet.
+13. **A turn's last reply** can reach the transcript just after its Stop hook; the app re-reads at 0.4,
+    1.2 and 3 s, so the reply's feed line can land a moment after "Finished its turn".
+14. **tmux killed while the app runs** shows the Claude sessions as Exited with Resume; only a launch
+    resumes them by itself.
+15. **Cards show file paths relative to the hook's cwd** (the folder the card names). An absolute path
+    outside it usually makes the card terminal-only by width.
+16. **Other plugins.** A settings `env` block that sets CLAUDE_CODE_PLUGIN_DIRS still loads its own
+    plugin into the app's Claude sessions alongside the app's (seen in testing: another plugin printing
+    render errors into the TUI). Not the app's to change.
+17. **Security review nits** from now on are parked here instead of more fix rounds.
