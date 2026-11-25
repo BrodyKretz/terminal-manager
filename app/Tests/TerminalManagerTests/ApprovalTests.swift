@@ -79,6 +79,15 @@ final class AskSafetyTests: XCTestCase {
         XCTAssertEqual(unknown.detail, "{\"prompt\":\"summary\",\"url\":\"https://example.com\"}")
     }
 
+    func testAFileWithItsFinalNewlineStillFits() {
+        let write = fit("Write", ["file_path": "/w/demo/hello.txt", "content": "hi\n"])
+        XCTAssertTrue(write.isAnswerable)
+        XCTAssertEqual(write.detail, "hello.txt\nhi")
+        XCTAssertFalse(fit("Write", ["file_path": "/w/demo/hello.txt", "content": "hi\n\n\n"]).isAnswerable)
+        let read = fit("Read", ["file_path": "/w/demo/src/a.ts", "limit": 40])
+        XCTAssertEqual(read.detail, "src/a.ts\n{\"limit\":40}")
+    }
+
     func testAMultiLineCommandThatFitsKeepsItsLines() {
         let command = "cd build &&\nmake install"
         let result = fit("Bash", ["command": command])

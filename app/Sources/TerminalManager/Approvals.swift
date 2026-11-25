@@ -153,6 +153,7 @@ enum ToolSubject {
         case "Bash": return "Wants to run \(short)"
         case "Edit", "MultiEdit", "NotebookEdit": return "Wants to edit \(short)"
         case "Write": return "Wants to write \(short)"
+        case "Read": return "Wants to read \(short)"
         case "WebFetch": return "Wants to fetch \(short)"
         default: return "Wants to use \(tool)"
         }

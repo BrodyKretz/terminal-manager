@@ -4,6 +4,12 @@ import Foundation
 /// Pure, so the tests check exactly what runs.
 struct TmuxCommands: Equatable {
     static let defaultPath = "/opt/homebrew/bin/tmux"
+    static let knownPaths = [defaultPath, "/usr/local/bin/tmux", "/opt/local/bin/tmux"]
+
+    /// Homebrew's tmux on Apple silicon, then on Intel, then MacPorts.
+    static func resolvedPath(fileManager: FileManager = .default) -> String {
+        knownPaths.first { fileManager.isExecutableFile(atPath: $0) } ?? defaultPath
+    }
     static let paneFormat = "#{session_name}\t#{pane_dead}\t#{pane_dead_status}\t#{pane_current_command}\t#{pane_current_path}\t#{pane_pid}\t#{pane_tty}"
 
     var tmuxPath: String

@@ -40,6 +40,16 @@ struct SessionRecord: Codable, Equatable {
     var exitCode: Int?
     /// The Claude process has run at least one turn: an exited one is worth resuming.
     var hasConversation: Bool = false
+    /// What the last finished turn changed, so a relaunch still shows it on the review card.
+    var files: [FileChange] = []
+    /// SessionEnd's reason: `prompt_input_exit` or `logout` mean the user ended Claude on purpose.
+    var endReason: String?
+
+    /// Brought back by itself at launch when its tmux session is gone: it had a conversation, and nobody
+    /// ended it on purpose (a reboot or a killed tmux server ends it with another reason, or none).
+    var resumesAtLaunch: Bool {
+        kind == .claude && claudeSessionID != nil && hasConversation && !["prompt_input_exit", "logout"].contains(endReason ?? "")
+    }
 
     var tmuxName: String { "tm-\(id)" }
 
@@ -134,5 +144,7 @@ extension SessionRecord {
         context = try container.decodeIfPresent(Int.self, forKey: .context)
         exitCode = try container.decodeIfPresent(Int.self, forKey: .exitCode)
         hasConversation = try container.decodeIfPresent(Bool.self, forKey: .hasConversation) ?? false
+        files = try container.decodeIfPresent([FileChange].self, forKey: .files) ?? []
+        endReason = try container.decodeIfPresent(String.self, forKey: .endReason)
     }
 }

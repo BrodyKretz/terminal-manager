@@ -38,8 +38,11 @@ enum AskDisplay {
             lines = [string("command")!]
             consumed = ["command"]
         case "Write" where string("file_path") != nil && string("content") != nil:
-            lines = [path("file_path")!, string("content")!]
+            lines = [path("file_path")!, withoutFinalNewline(string("content")!)]
             consumed = ["file_path", "content"]
+        case "Read" where string("file_path") != nil:
+            lines = [path("file_path")!]
+            consumed = ["file_path"]
         case "Edit" where string("file_path") != nil && string("old_string") != nil && string("new_string") != nil:
             lines = [path("file_path")!, prefixed(string("old_string")!, "- "), prefixed(string("new_string")!, "+ ")]
             consumed = ["file_path", "old_string", "new_string"]
@@ -54,6 +57,11 @@ enum AskDisplay {
             text = text.isEmpty ? json : text + "\n" + json
         }
         return (text, consumed)
+    }
+
+    /// A file's final newline shows as nothing; dropping it keeps an ordinary file from looking like a blank run.
+    static func withoutFinalNewline(_ text: String) -> String {
+        text.hasSuffix("\n") ? String(text.dropLast()) : text
     }
 
     static func prefixed(_ text: String, _ prefix: String) -> String {

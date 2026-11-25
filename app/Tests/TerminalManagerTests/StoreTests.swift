@@ -34,6 +34,21 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(mode, 0o600)
     }
 
+    func testOnlyAConversationNobodyEndedResumesAtLaunch() {
+        var record = SessionRecord(id: "a", kind: .claude, name: "api", dir: "/w", created: Date())
+        record.claudeSessionID = "u"
+        XCTAssertFalse(record.resumesAtLaunch, "no turn yet, nothing to resume")
+        record.hasConversation = true
+        XCTAssertTrue(record.resumesAtLaunch)
+        record.endReason = "other"
+        XCTAssertTrue(record.resumesAtLaunch, "a killed tmux server or a reboot")
+        record.endReason = "prompt_input_exit"
+        XCTAssertFalse(record.resumesAtLaunch, "/exit on purpose: offered, not forced")
+        record.endReason = nil
+        record.kind = .shell
+        XCTAssertFalse(record.resumesAtLaunch)
+    }
+
     func testAnOlderRecordStillLoads() throws {
         let json = #"{"version":1,"sessions":[{"id":"a1","kind":"shell","name":"zsh","dir":"/w","created":"2026-11-01T10:00:00Z"}],"closed":[]}"#
         let url = folder.appendingPathComponent("sessions.json")

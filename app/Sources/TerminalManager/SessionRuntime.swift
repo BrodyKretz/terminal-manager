@@ -8,7 +8,6 @@ struct SessionRuntime {
     var follower: TranscriptFollower?
     var model: String?
     var turnFiles: [FileChange] = []
-    var files: [FileChange] = []
     var askSeq: Int?
     var lastDone: Int?
     var lastLine: String?
@@ -39,7 +38,7 @@ enum SessionView {
             "failed": record.hasError,
             "muted": record.muted,
             "host": "app",
-            "files": runtime.files.map(\.bridgeObject),
+            "files": record.files.map(\.bridgeObject),
             "interacted": runtime.interacted,
             "canResume": record.kind == .claude && record.claudeSessionID != nil && record.hasConversation,
         ]

@@ -48,7 +48,7 @@ final class SessionManager {
     var onStatus: ((SessionRecord, SessionStatus, SessionStatus) -> Void)?
     var onToast: ((String) -> Void)?
 
-    init(paths: AppPaths, tmuxPath: String = TmuxCommands.defaultPath, home: String = NSHomeDirectory()) {
+    init(paths: AppPaths, tmuxPath: String = TmuxCommands.resolvedPath(), home: String = NSHomeDirectory()) {
         self.paths = paths
         self.home = home
         tmux = TmuxCommands(tmuxPath: tmuxPath, socketName: paths.tmuxSocketName, configPath: paths.tmuxConfig.path)
@@ -132,10 +132,10 @@ final class SessionManager {
         for record in file.sessions where !alive.contains(record.tmuxName) {
             switch record.kind {
             case .claude:
-                if record.claudeSessionID != nil, record.status != .exited {
+                if record.resumesAtLaunch {
                     Log.info("session \(record.id): its tmux session is gone; resuming the conversation")
                     launchClaude(record, isNew: false, prompt: nil)
-                    update(record.id) { $0.status = .idle; $0.statusAt = Date(); $0.summary = "Resumed, waiting for a message"; $0.exitCode = nil }
+                    update(record.id) { $0.status = .idle; $0.statusAt = Date(); $0.summary = "Resumed, waiting for a message"; $0.exitCode = nil; $0.endReason = nil }
                     note(record.id, type: "life") { $0.text = "Resumed after the terminal went away" }
                 } else {
                     update(record.id) { $0.status = .exited; $0.summary = "Claude exited" }
@@ -244,13 +244,13 @@ final class SessionManager {
         case .claude:
             guard login?.claudePath != nil else { return .failure(.noClaude) }
             launchClaude(record, isNew: false, prompt: nil, respawn: true)
-            update(id) { $0.exitCode = nil }
+            update(id) { $0.exitCode = nil; $0.endReason = nil }
             applyClaude(id, .restarted)
         case .shell:
             launchShell(record, respawn: true)
             update(id) { $0.status = .idle; $0.statusAt = Date(); $0.exitCode = nil; $0.summary = "" }
         }
-        runtime[id]?.files = []
+        update(id) { $0.files = [] }
         note(id, type: "life") { $0.text = "Restarted" }
         changed()
         return .success(())
@@ -486,7 +486,7 @@ final class SessionManager {
             hooks.release(sessionID: id, because: "a new prompt came in")
             update(id) { $0.hasConversation = true; $0.hasError = false }
             runtime[id]?.turnFiles = []
-            runtime[id]?.files = []
+            update(id) { $0.files = [] }
             applyClaude(id, .promptSubmitted(event.prompt))
             note(id, type: "you") { $0.verb = "sent"; $0.text = event.prompt.map { ClaudeStatusReducer.clip(ClaudeStatusReducer.oneLine($0), to: 300) } ?? "" }
         case "PreToolUse":
@@ -520,7 +520,10 @@ final class SessionManager {
             readTranscript(id)
             if let reply = event.lastReply, !reply.isEmpty { update(id) { $0.lastReply = reply } }
             applyClaude(id, .stopped(lastReply: event.lastReply ?? self.record(id)?.lastReply, stopHookActive: event.stopHookActive))
-            if !event.stopHookActive { turnEnded(id, dir: record.dir) }
+            if !event.stopHookActive {
+                turnEnded(id, dir: record.dir)
+                readTranscriptSoon(id)
+            }
         case "StopFailure":
             hooks.release(sessionID: id, because: "the turn failed")
             applyClaude(id, .stopFailed)
@@ -528,7 +531,10 @@ final class SessionManager {
             turnEnded(id, dir: record.dir)
         case "SessionEnd":
             hooks.release(sessionID: id, because: "its session ended")
-            if event.reason != "clear" { note(id, type: "life") { $0.text = "Claude exited" } }
+            if event.reason != "clear" {
+                update(id) { $0.endReason = event.reason }
+                note(id, type: "life") { $0.text = "Claude exited" }
+            }
             applyClaude(id, .sessionEnded(reason: event.reason))
         default:
             break
@@ -585,7 +591,20 @@ final class SessionManager {
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
                     guard let self, self.runtime[id] != nil else { return }
-                    self.runtime[id]?.files = changes ?? touched
+                    self.update(id) { $0.files = changes ?? touched }
+                    self.changed()
+                }
+            }
+        }
+    }
+
+    /// Claude Code can write a turn's last reply to the transcript just after its Stop hook runs.
+    private func readTranscriptSoon(_ id: String) {
+        for delay in [0.4, 1.2, 3.0] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                MainActor.assumeIsolated {
+                    guard let self, self.runtime[id] != nil else { return }
+                    self.readTranscript(id)
                     self.changed()
                 }
             }

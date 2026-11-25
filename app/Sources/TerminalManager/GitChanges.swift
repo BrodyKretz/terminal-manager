@@ -1,6 +1,6 @@
 import Foundation
 
-struct FileChange: Equatable {
+struct FileChange: Codable, Equatable {
     var path: String
     var add: Int
     var del: Int
