@@ -13,9 +13,9 @@
 
   const sessions = [
     { id: "a1", kind: "claude", name: "api-server", dir: "~/work/api-server", status: "needs_you", statusAt: min(2), startedAt: min(72), summary: "Wants to run npm test", context: 64, mode: "Ask before edits", files: [], canResume: true,
-      ask: { id: "q1", type: "permission", text: "Allow Bash: npm test -- --runInBand?", options: ["Allow once", "Always allow", "Deny"], answerable: true, tool: "Bash" } },
+      ask: { id: "q1", type: "permission", text: "Allow Bash: npm test -- --runInBand?", heading: "Allow Bash?", detail: "npm test -- --runInBand", options: ["Allow once", "Always allow", "Deny"], answerable: true, tool: "Bash" } },
     { id: "a2", kind: "claude", name: "web-app", dir: "~/work/web-app", status: "needs_you", statusAt: min(6), startedAt: min(38), summary: "Asking a question", context: 31, mode: "Auto", files: [], canResume: true,
-      ask: { id: "q2", type: "question", text: "Should the settings page use tabs or one long form?", options: ["Tabs", "One long form", "Type an answer"], answerable: true, tool: "AskUserQuestion" } },
+      ask: { id: "q2", type: "question", text: "Should the settings page use tabs or one long form?", heading: "Claude asks", detail: "Should the settings page use tabs or one long form?", options: ["Tabs", "One long form", "Type an answer"], answerable: true, tool: "AskUserQuestion" } },
     { id: "a3", kind: "claude", name: "notes", dir: "~/work/notes", status: "working", statusAt: min(4), startedAt: min(125), summary: "Running pytest -q", context: 78, mode: "Accept edits", files: [], canResume: true },
     { id: "a4", kind: "claude", name: "docs-site", dir: "~/work/docs-site", status: "ready", statusAt: min(11), startedAt: min(52), summary: "Done: the new guide page is in", context: 45, mode: "Auto", canResume: true,
       lastReply: "Added the getting-started guide and linked it from the sidebar. Want me to tighten the intro next?",
@@ -112,6 +112,7 @@
     setPrefs: m => { Object.keys(m).forEach(k => { if (k !== "op") prefs[k] = m[k]; }); return prefs; },
     answer: m => {
       const s = sessions.find(x => x.id === m.id);
+      if (!s.ask || s.ask.id !== m.ask) return Promise.reject(new Error("already-answered"));
       const label = m.text != null ? m.text : s.ask.options[m.index];
       const e = events.find(x => x.seq === s.askSeq);
       if (e) e.answer = s.ask.type === "permission" ? ({ "Allow once": "Allowed once", "Always allow": "Always allowed", Deny: "Denied" })[label] : `Answered: ${label}`;

@@ -241,11 +241,20 @@
     return s.ask.options.map((o, i) => {
       const isType = /^Type an answer$/i.test(o);
       const pressed = isType && S.typing[typingKey];
-      return `<button class="opt ${i === 0 && !S.typing[typingKey] ? "first" : ""} ${pressed ? "pressed" : ""}" data-act="${isType ? "typeAnswer" : "answer"}" data-sid="${s.id}" data-i="${i}" data-where="${where}">${esc(o)}${withKbd ? `<kbd>${i + 1}</kbd>` : ""}</button>`;
+      return `<button class="opt ${i === 0 && !S.typing[typingKey] ? "first" : ""} ${pressed ? "pressed" : ""}" data-act="${isType ? "typeAnswer" : "answer"}" data-sid="${s.id}" data-askid="${esc(s.ask.id || "")}" data-i="${i}" data-where="${where}">${esc(o)}${withKbd ? `<kbd>${i + 1}</kbd>` : ""}</button>`;
     }).join("");
   }
-  function inrowHTML(key, sid, placeholder, act, label) {
-    return `<div class="inrow"><input class="field" data-draft="${key}" data-fk="${key}" data-enter="${act}" data-sid="${sid}" data-key="${key}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" autocomplete="off"><button class="sendb" data-act="${act}" data-sid="${sid}" data-key="${key}">${label || "Send"}</button></div>`;
+  /// What an Allow button approves, in full: every line, nothing clipped. Cards that cannot show it whole
+  /// say why and send you to the terminal instead.
+  function askBodyHTML(s) {
+    const a = s.ask;
+    const detail = a.detail ? `<pre class="ask-detail" tabindex="0">${esc(a.detail)}</pre>` : "";
+    const why = !a.answerable && a.reason ? `<div class="ask-why">${esc(a.reason)}</div>` : "";
+    return `<div class="ask-head">${esc(a.heading || a.text)}</div>${detail}${why}`;
+  }
+  function inrowHTML(key, sid, placeholder, act, label, askId) {
+    const ask = askId ? ` data-askid="${esc(askId)}"` : "";
+    return `<div class="inrow"><input class="field" data-draft="${key}" data-fk="${key}" data-enter="${act}" data-sid="${sid}" data-key="${key}"${ask} placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" autocomplete="off"><button class="sendb" data-act="${act}" data-sid="${sid}" data-key="${key}"${ask}>${label || "Send"}</button></div>`;
   }
 
   function renderHeader() {
@@ -267,15 +276,15 @@
       const typing = S.typing[`qa:${s.id}`];
       qa = `<div class="qa-wrap"><div class="qa-in"><div class="qa needs">
         <div class="qa-k">Quick answer · ${s.ask.type === "permission" ? "permission" : "question"}</div>
-        <div class="qa-q">${askHTML(s.ask.text)}</div>
+        <div class="qa-q">${askBodyHTML(s)}</div>
         <div class="opts">${optsHTML(s, "qa", false)}</div>
-        ${typing ? inrowHTML(`qa:${s.id}`, s.id, "Type your answer", "sendTyped") : ""}</div></div></div>`;
+        ${typing ? inrowHTML(`qa:${s.id}`, s.id, "Type your answer", "sendTyped", "", s.ask.id) : ""}</div></div></div>`;
     }
     const html = `<button class="row-main" data-act="open" data-sid="${s.id}"><span class="r-1">${shape(s)}<span class="r-name">${esc(s.name)}</span>${s.muted ? `<span class="r-muted" title="Notifications muted">${IC.bellOff}</span>` : ""}${nNew ? `<span class="r-new">${nNew} new</span>` : ""}<span class="r-time" data-tick="since:${s.id}"></span></span><span class="r-sub"><span class="r-st">${statusLabel(s)}</span>${sub ? ` · ${esc(sub)}` : ""}</span></button><button class="r-filter" data-act="sfilter" data-sid="${s.id}" aria-pressed="${filtering}" title="${filtering ? "Stop filtering the feed to this session" : "Show only this session in the feed"}" aria-label="${filtering ? "Stop filtering the feed" : `Show only ${esc(s.name)} in the feed`}">${IC.funnel}</button>${qa}`;
     return {
       key: `r:${s.id}`, html,
       cls: `row st-${s.status}${S.view === s.id ? " on" : ""}${filtering ? " filtering" : ""}${S.typing[`qa:${s.id}`] ? " qa-open" : ""}`,
-      attrs: { "data-ask": s.status === "needs_you" ? s.id : "", "data-where": "qa" }
+      attrs: { "data-ask": s.status === "needs_you" ? s.id : "", "data-askid": s.ask ? String(s.ask.id || "") : "", "data-where": "qa" }
     };
   }
 
@@ -317,8 +326,8 @@
       const typing = S.typing[`lane:${s.id}`];
       html = `<div class="wc-top">${shape(s)}<span class="wc-kind">${s.ask.type === "permission" ? "Needs permission" : "Asked a question"}</span><span class="wc-t" data-tick="since:${s.id}"></span></div>
         <button class="wc-name" data-act="open" data-sid="${s.id}">${esc(s.name)}<small>${esc(s.dir)}</small></button>
-        <div class="wc-body">${askHTML(s.ask.text)}</div>
-        ${typing ? inrowHTML(`lane:${s.id}`, s.id, "Type your answer", "sendTyped") : `<div class="opts">${optsHTML(s, "lane", false)}</div>`}`;
+        <div class="wc-body">${askBodyHTML(s)}</div>
+        ${typing ? inrowHTML(`lane:${s.id}`, s.id, "Type your answer", "sendTyped", "", s.ask.id) : `<div class="opts">${optsHTML(s, "lane", false)}</div>`}`;
     } else {
       const { add, del } = fileTotals(s);
       html = `<div class="wc-top">${shape(s)}<span class="wc-kind">${s.failed ? "Stopped on an error" : "Ready for review"}</span><span class="wc-t" data-tick="since:${s.id}"></span></div>
@@ -327,7 +336,7 @@
         <div class="wc-files">${s.files.length} file${s.files.length === 1 ? "" : "s"} <span class="add">+${add}</span><span class="del">−${del}</span><button class="btn sm ok" data-act="review" data-sid="${s.id}">Looks good</button></div>
         ${inrowHTML(`lane:${s.id}`, s.id, `Feedback for ${s.name}`, "sendLane")}`;
     }
-    return { key: s.id, cls: `wcard ${s.status === "needs_you" ? "needs" : "ready"}`, html, attrs: { "data-ask": s.status === "needs_you" ? s.id : "", "data-where": "lane" } };
+    return { key: s.id, cls: `wcard ${s.status === "needs_you" ? "needs" : "ready"}`, html, attrs: { "data-ask": s.status === "needs_you" ? s.id : "", "data-askid": s.ask ? String(s.ask.id || "") : "", "data-where": "lane" } };
   }
 
   function animateCard(n, entering) {
@@ -511,10 +520,10 @@
     if (s.status === "needs_you" && s.ask) {
       const typing = S.typing[`ans:${s.id}`];
       const n = s.ask.answerable ? s.ask.options.length : 0;
-      out += `<div class="askp" data-ask="${s.id}" data-where="ans" tabindex="-1"><div class="askp-k">${shape(s)}${s.ask.type === "permission" ? "Needs permission" : "Asked a question"}<span class="t">waiting <span data-tick="since:${s.id}"></span></span></div>
-        <div class="askp-q">${askHTML(s.ask.text)}</div>
+      out += `<div class="askp" data-ask="${s.id}" data-askid="${esc(s.ask.id || "")}" data-where="ans" tabindex="-1"><div class="askp-k">${shape(s)}${s.ask.type === "permission" ? "Needs permission" : "Asked a question"}<span class="t">waiting <span data-tick="since:${s.id}"></span></span></div>
+        <div class="askp-q">${askBodyHTML(s)}</div>
         <div class="opts">${optsHTML(s, "ans", n > 0)}<span class="askp-foot">${n ? `Press 1–${n} to choose, or answer in the terminal above` : "The terminal above shows the full prompt"}</span></div>
-        ${typing ? inrowHTML(`ans:${s.id}`, s.id, "Type your answer", "sendTyped", "Send answer") : ""}</div>`;
+        ${typing ? inrowHTML(`ans:${s.id}`, s.id, "Type your answer", "sendTyped", "Send answer", s.ask.id) : ""}</div>`;
     } else if (s.status === "ready") {
       const { add, del } = fileTotals(s);
       out += `<div class="review"><div class="rv-head">${shape(s)}<b>Review this turn</b><span class="sum">${s.files.length} file${s.files.length === 1 ? "" : "s"} changed · <span class="add">+${add}</span> <span class="del">−${del}</span></span><button class="btn sm ok" data-act="review" data-sid="${s.id}">Looks good</button></div>
@@ -836,9 +845,11 @@
   function clearTypingFor(sid) {
     ["lane", "qa", "ans"].forEach(w => { delete S.typing[`${w}:${sid}`]; delete S.drafts[`${w}:${sid}`]; });
   }
-  function pickOption(sid, i, where) {
+  /// `askId` is the ask the clicked card showed; a different current ask is never answered in its place.
+  function pickOption(sid, i, where, askId) {
     const s = ses(sid);
-    if (!s || !s.ask || !s.ask.answerable || i < 0 || i >= s.ask.options.length) return;
+    if (!s || !s.ask || !s.ask.answerable || !askId || i < 0 || i >= s.ask.options.length) return;
+    if (s.ask.id !== askId) { toast({ html: "That prompt changed before your answer. Look again.", ms: 4000 }); schedule(); return; }
     if (/^Type an answer$/i.test(s.ask.options[i])) {
       S.typing[`${where}:${sid}`] = true;
       S.focusKey = `${where}:${sid}`;
@@ -846,13 +857,13 @@
       return;
     }
     clearTypingFor(sid);
-    B.answer(sid, i).catch(fail);
+    B.answer(sid, askId, i).catch(fail);
   }
-  function sendTyped(sid, key) {
+  function sendTyped(sid, key, askId) {
     const text = (S.drafts[key] || "").trim();
-    if (!text) return;
+    if (!text || !askId) return;
     clearTypingFor(sid);
-    B.answer(sid, null, text).catch(fail);
+    B.answer(sid, askId, null, text).catch(fail);
   }
   function sendComposer(sid) {
     const s = ses(sid);
@@ -998,9 +1009,9 @@
         schedule();
         break;
       }
-      case "answer": pickOption(sid, Number(el.dataset.i), el.dataset.where); break;
-      case "typeAnswer": pickOption(sid, Number(el.dataset.i), el.dataset.where); break;
-      case "sendTyped": sendTyped(sid, el.dataset.key); break;
+      case "answer": pickOption(sid, Number(el.dataset.i), el.dataset.where, el.dataset.askid); break;
+      case "typeAnswer": pickOption(sid, Number(el.dataset.i), el.dataset.where, el.dataset.askid); break;
+      case "sendTyped": sendTyped(sid, el.dataset.key, el.dataset.askid); break;
       case "review": B.review(sid).catch(fail); break;
       case "sendLane": sendLane(sid); break;
       case "send": sendComposer(sid); break;
@@ -1174,11 +1185,17 @@
       const holder = a && a.closest && a.closest('[data-ask]:not([data-ask=""])');
       let sid = holder ? holder.dataset.ask : null;
       let where = holder ? holder.dataset.where : "ans";
-      if (!sid && S.view !== "feed") { sid = S.view; where = "ans"; }
+      let shown = holder ? holder.dataset.askid : null;
+      if (!sid && S.view !== "feed") {
+        const card = document.querySelector("#svBottom .askp");
+        sid = S.view;
+        where = "ans";
+        shown = card ? card.dataset.askid : null;
+      }
       const s = ses(sid);
       if (!s || s.status !== "needs_you" || !s.ask) return;
       e.preventDefault();
-      pickOption(sid, Number(k) - 1, where);
+      pickOption(sid, Number(k) - 1, where, shown);
     }
   });
 

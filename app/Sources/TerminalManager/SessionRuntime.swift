@@ -53,7 +53,10 @@ enum SessionView {
             if let held {
                 object["ask"] = askObject(held)
             } else {
-                object["ask"] = ["type": "permission", "text": "Claude is waiting for you in the terminal", "options": [String](), "answerable": false]
+                object["ask"] = [
+                    "type": "permission", "text": "Claude is waiting for you in the terminal", "heading": "Claude is waiting for you", "detail": "",
+                    "options": [String](), "answerable": false, "reason": "Answer this one in the terminal",
+                ]
             }
         }
         return object
@@ -64,9 +67,12 @@ enum SessionView {
             "id": held.id,
             "type": held.ask.kind.rawValue,
             "text": held.ask.text,
-            "options": held.ask.options,
+            "heading": held.ask.heading,
+            "detail": held.ask.detail,
+            "options": held.ask.isAnswerable ? held.ask.options : [String](),
             "tool": held.ask.tool,
             "answerable": held.ask.isAnswerable,
+            "reason": held.ask.terminalReason ?? "",
         ]
     }
 }

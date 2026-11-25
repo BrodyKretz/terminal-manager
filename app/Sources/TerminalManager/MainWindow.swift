@@ -22,11 +22,9 @@ final class MainWindowController: NSObject, NSWindowDelegate, WKNavigationDelega
         configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
         let frame = NSRect(origin: .zero, size: Self.defaultSize)
         webView = WKWebView(frame: frame, configuration: configuration)
-        window = NSWindow(contentRect: frame, styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
+        window = NSWindow(contentRect: frame, styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         super.init()
         window.title = "Terminal Manager"
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
         window.isReleasedWhenClosed = false
         window.minSize = Self.minimumSize
         window.contentView = webView

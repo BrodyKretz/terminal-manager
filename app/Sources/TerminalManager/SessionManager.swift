@@ -285,9 +285,23 @@ final class SessionManager {
         return .success(())
     }
 
-    func answer(_ id: String, answer: AskAnswer, completion: @escaping (Result<Void, SessionError>) -> Void) {
+    /// The exact request the card showed, still held for that session; never another one of the session's.
+    nonisolated static func heldAsk(_ askID: String, session id: String, in held: [HeldAsk]) -> Result<HeldAsk, SessionError> {
+        guard let item = held.first(where: { $0.id == askID }), item.sessionID == id else { return .failure(.alreadyAnswered) }
+        return .success(item)
+    }
+
+    /// Answers the ask the page showed (`askID`). One that went meanwhile fails with already-answered; the
+    /// page then shows the session as it is now.
+    func answer(_ id: String, askID: String, answer: AskAnswer, completion: @escaping (Result<Void, SessionError>) -> Void) {
         guard record(id) != nil else { return completion(.failure(.notFound)) }
-        guard let held = hooks.oldest(for: id) else { return completion(.failure(.answerInTerminal)) }
+        let held: HeldAsk
+        switch Self.heldAsk(askID, session: id, in: hooks.held) {
+        case .success(let item): held = item
+        case .failure(let error):
+            changed()
+            return completion(.failure(error))
+        }
         guard let built = HookAnswer.output(for: held.ask, answer: answer) else { return completion(.failure(.badRequest)) }
         hooks.answer(held.id, output: built.output) { [weak self] isDelivered in
             guard let self else { return }

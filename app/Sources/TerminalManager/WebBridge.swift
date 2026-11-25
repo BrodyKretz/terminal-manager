@@ -70,6 +70,7 @@ final class WebBridge: NSObject, WKScriptMessageHandlerWithReply {
         case "stop": finish(manager.stopSession(id))
         case "send": finish(manager.send(id, text: BridgeValue.string(message["text"]) ?? ""))
         case "answer":
+            guard let askID = BridgeValue.string(message["ask"]), !askID.isEmpty else { return reply(nil, "bad-request") }
             let answer: AskAnswer
             if let index = BridgeValue.int(message["index"]) {
                 answer = .option(index)
@@ -78,7 +79,10 @@ final class WebBridge: NSObject, WKScriptMessageHandlerWithReply {
             } else {
                 return reply(nil, "bad-request")
             }
-            manager.answer(id, answer: answer) { finish($0) }
+            manager.answer(id, askID: askID, answer: answer) { result in
+                if case .failure = result { self.sendSessions() }
+                finish(result)
+            }
         case "review": finish(manager.review(id))
         case "rename": finish(manager.rename(id, to: BridgeValue.string(message["name"]) ?? ""))
         case "setMuted": finish(manager.setMuted(id, BridgeValue.bool(message["muted"]) ?? false))

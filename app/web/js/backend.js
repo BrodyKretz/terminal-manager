@@ -82,7 +82,7 @@
 
   const run = (op, args) => post(op, args).catch(err => { notify("error", { op, err }); throw err; });
   B.create = o => run("create", o).then(r => r.id);
-  B.answer = (sid, idx, typed) => run("answer", typed !== undefined ? { id: sid, text: typed } : { id: sid, index: idx });
+  B.answer = (sid, askId, idx, typed) => run("answer", typed !== undefined ? { id: sid, ask: askId, text: typed } : { id: sid, ask: askId, index: idx });
   B.send = (sid, text) => run("send", { id: sid, text });
   B.review = sid => run("review", { id: sid });
   B.rename = (sid, name) => run("rename", { id: sid, name: String(name || "").trim() });
