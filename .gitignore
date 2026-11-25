@@ -1,0 +1,14 @@
+.DS_Store
+app/.build/
+app/build/
+*.xcuserstate
+xcuserdata/
+app/**/*.o
+app/**/*.d
+app/**/*.swiftdeps
+app/**/*.swiftdeps~
+build/
+.build/
+*.log
+/design-options/
+/prototypes/
