@@ -12,10 +12,10 @@
   const ptys = new Map();
 
   const sessions = [
-    { id: "a1", kind: "claude", name: "api-server", dir: "~/work/api-server", status: "needs_you", statusAt: min(2), startedAt: min(72), summary: "Wants to run npm test", context: 64, mode: "Ask before edits", files: [], canResume: true,
-      ask: { id: "q1", type: "permission", text: "Allow Bash: npm test -- --runInBand?", heading: "Allow Bash?", detail: "npm test -- --runInBand", options: ["Allow once", "Always allow", "Deny"], answerable: true, tool: "Bash" } },
+    { id: "a1", kind: "claude", name: "api-server", dir: "~/work/api-server", status: "needs_you", statusAt: min(2), startedAt: min(72), summary: "Wants to run npm run test:unit", context: 64, mode: "Ask before edits", files: [], canResume: true,
+      ask: { id: "q1", type: "permission", text: "Allow Bash: npm run test:unit?", heading: "Allow Bash?", detail: "npm run test:unit", options: ["Allow once", "Always allow", "Deny"], answerable: true, compact: true, tool: "Bash" } },
     { id: "a2", kind: "claude", name: "web-app", dir: "~/work/web-app", status: "needs_you", statusAt: min(6), startedAt: min(38), summary: "Asking a question", context: 31, mode: "Auto", files: [], canResume: true,
-      ask: { id: "q2", type: "question", text: "Should the settings page use tabs or one long form?", heading: "Claude asks", detail: "Should the settings page use tabs or one long form?", options: ["Tabs", "One long form", "Type an answer"], answerable: true, tool: "AskUserQuestion" } },
+      ask: { id: "q2", type: "question", text: "Tabs or one long form?", heading: "Claude asks", detail: "Tabs or one long form?\n- Tabs\n- One long form", options: ["Tabs", "One long form", "Type an answer"], answerable: true, compact: true, tool: "AskUserQuestion" } },
     { id: "a3", kind: "claude", name: "notes", dir: "~/work/notes", status: "working", statusAt: min(4), startedAt: min(125), summary: "Running pytest -q", context: 78, mode: "Accept edits", files: [], canResume: true },
     { id: "a4", kind: "claude", name: "docs-site", dir: "~/work/docs-site", status: "ready", statusAt: min(11), startedAt: min(52), summary: "Done: the new guide page is in", context: 45, mode: "Auto", canResume: true,
       lastReply: "Added the getting-started guide and linked it from the sidebar. Want me to tighten the intro next?",
@@ -47,7 +47,7 @@
   ev("a4", "say", min(12), { text: "Added the getting-started guide and linked it from the sidebar. Want me to tighten the intro next?" });
   sessions[3].lastDone = ev("a4", "done", min(11)).seq;
   ev("a2", "tool", min(8), { tool: "Read", args: "src/settings/Page.tsx" });
-  sessions[1].askSeq = ev("a2", "ask", min(6), { text: "Should the settings page use tabs or one long form?" }).seq;
+  sessions[1].askSeq = ev("a2", "ask", min(6), { text: "Tabs or one long form?" }).seq;
   ev("t1", "cmd", min(48), { text: "npm run dev" });
   ev("t3", "cmd", min(9), { text: "pytest" });
   ev("t3", "exit", min(5), { code: 1 });
@@ -56,7 +56,7 @@
   ev("a3", "tool", min(3), { tool: "Bash", args: "pytest -q" });
   ev("a1", "tool", min(5), { tool: "Edit", args: "src/routes/users.ts" });
   ev("a1", "tool", min(3), { tool: "Bash", args: "npm run lint" });
-  sessions[0].askSeq = ev("a1", "perm", min(2), { text: "Allow Bash: npm test -- --runInBand?" }).seq;
+  sessions[0].askSeq = ev("a1", "perm", min(2), { text: "Allow Bash: npm run test:unit?" }).seq;
   ev("a3", "think", min(0.4));
 
   const prefs = { dnd: false, notifications: true, openAtLogin: true, openAtLoginAvailable: true };
@@ -68,26 +68,21 @@
   ];
 
   const enc = s => btoa(unescape(encodeURIComponent(s)));
-  const CLAUDE_SCREEN = name => [
-    "\x1b[38;5;174m╭───────────────────────────────────────────────╮\x1b[0m",
-    "\x1b[38;5;174m│\x1b[0m \x1b[1m✻ Welcome to Claude Code\x1b[0m                      \x1b[38;5;174m│\x1b[0m",
-    `\x1b[38;5;174m│\x1b[0m   cwd: ~/work/${name.padEnd(33)}\x1b[38;5;174m│\x1b[0m`,
-    "\x1b[38;5;174m╰───────────────────────────────────────────────╯\x1b[0m",
+  const strip = t => t.replace(/\x1b\[[0-9;]*m/g, "");
+  function box(lines, width, color, title) {
+    const top = title ? `╭─ ${title} ${"─".repeat(width - title.length - 3)}╮` : `╭${"─".repeat(width)}╮`;
+    const row = l => `${color}│\x1b[0m ${l}${" ".repeat(Math.max(0, width - 1 - strip(l).length))}${color}│\x1b[0m`;
+    return [color + top + "\x1b[0m"].concat(lines.map(row), [`${color}╰${"─".repeat(width)}╯\x1b[0m`]);
+  }
+  const CLAUDE_SCREEN = name => box(["\x1b[1m* Welcome to Claude Code\x1b[0m", "", `  cwd: ~/work/${name}`], 47, "\x1b[38;5;174m").concat([
     "",
     "\x1b[2m>\x1b[0m Run the tests and fix what fails",
     "",
     "\x1b[38;5;75m⏺\x1b[0m \x1b[1mEdit\x1b[0m(src/routes/users.ts)",
     "  \x1b[2m⎿  Updated with 6 additions and 2 removals\x1b[0m",
-    "\x1b[38;5;75m⏺\x1b[0m \x1b[1mBash\x1b[0m(npm test -- --runInBand)",
-    "",
-    "\x1b[38;5;214m╭─ Bash command ──────────────────────────────────╮\x1b[0m",
-    "\x1b[38;5;214m│\x1b[0m   npm test -- --runInBand                       \x1b[38;5;214m│\x1b[0m",
-    "\x1b[38;5;214m│\x1b[0m Do you want to proceed?                         \x1b[38;5;214m│\x1b[0m",
-    "\x1b[38;5;214m│\x1b[0m \x1b[36m❯ 1. Yes\x1b[0m                                       \x1b[38;5;214m│\x1b[0m",
-    "\x1b[38;5;214m│\x1b[0m   2. Yes, and don't ask again for npm test       \x1b[38;5;214m│\x1b[0m",
-    "\x1b[38;5;214m│\x1b[0m   3. No, and tell Claude what to do differently \x1b[38;5;214m│\x1b[0m",
-    "\x1b[38;5;214m╰─────────────────────────────────────────────────╯\x1b[0m"
-  ].join("\r\n");
+    "\x1b[38;5;75m⏺\x1b[0m \x1b[1mBash\x1b[0m(npm run test:unit)",
+    ""
+  ], box(["  npm run test:unit", "", "Do you want to proceed?", "\x1b[36m> 1. Yes\x1b[0m", "  2. Yes, and don't ask again for npm test", "  3. No, and tell Claude what to do differently"], 50, "\x1b[38;5;214m", "Bash command")).join("\r\n");
   const SHELL_SCREEN = s => s.status === "process"
     ? `you@mac web-app % npm run dev\r\n\r\n> web-app@0.1.0 dev\r\n> vite\r\n\r\n  \x1b[32mVITE\x1b[0m ready in 312 ms\r\n  ➜  Local: \x1b[36mhttp://localhost:5173/\x1b[0m\r\n GET / 200 in 41ms\r\n`
     : s.status === "exited"

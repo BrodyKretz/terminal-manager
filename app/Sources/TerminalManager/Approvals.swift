@@ -21,28 +21,24 @@ struct AskRequest {
     static let alwaysAllow = "Always allow"
     static let deny = "Deny"
     static let maxShown = 300
-    /// The most a card shows in full; anything longer is answered in the terminal.
-    static let maxDetailCharacters = 20_000
-    static let maxDetailLines = 400
-    static let terminalOnlyNote = "Answer this one in the terminal"
 
     var kind: Kind
     var tool: String
     var toolInput: [String: Any]
-    /// One line for the feed and the list: may be clipped, never shown next to an Allow button alone.
+    /// One line for the feed and the list: may be clipped, never shown with answer buttons.
     var text: String
     /// The card's heading above `detail`.
     var heading: String
-    /// The whole tool input as the card shows it: every line kept, nothing clipped. Control, bidi and
-    /// zero-width characters are spelled out (`\u{202E}`); such input is never answerable from the app.
+    /// What the card shows in full when it carries answer buttons (AskDisplay); empty otherwise.
     var detail: String
     var options: [String]
     /// The suggestion "Always allow" echoes back; nil when Claude Code offered none to echo.
     var alwaysEntry: [String: Any]?
     var questions: [AskQuestion]
-    /// False for what only the terminal should answer: several questions, multi-select, input whose
-    /// numbers a double cannot hold exactly, input too long to show whole, or hidden characters.
+    /// Whether the session view's card may carry answer buttons (AskDisplay's rule).
     var isAnswerable: Bool
+    /// Whether the narrow cards (lane, list row) may carry them too.
+    var fitsCompact: Bool
     /// Why the card sends you to the terminal; nil when it can be answered here.
     var terminalReason: String?
     /// The list row's line under the name.
@@ -60,19 +56,17 @@ struct AskRequest {
         if tool == questionTool {
             let questions = parseQuestions(toolInput)
             let first = questions.first
-            let raw = ([first?.question ?? ""] + (first?.options ?? [])).joined(separator: "\n")
-            var reason: String?
-            if !isInputExact { reason = terminalOnlyNote }
-            if questions.count != 1 || first?.multiSelect != false || (first?.options.isEmpty ?? true) { reason = "This question has several parts; answer it in the terminal" }
-            if hasHiddenCharacters(raw) { reason = "\(terminalOnlyNote): it holds hidden characters" }
-            if raw.count > maxDetailCharacters { reason = "\(terminalOnlyNote): it is too long to show here" }
-            let isAnswerable = reason == nil
+            var fit = AskDisplay.question(input: toolInput, isInputExact: isInputExact)
+            if questions.count != 1 || first?.multiSelect != false || (first?.options.isEmpty ?? true) {
+                fit = AskDisplay.Fit(detail: "", isAnswerable: false, fitsCompact: false, reason: "This question has several parts; answer it in the terminal")
+            }
             return AskRequest(
                 kind: .question, tool: tool, toolInput: toolInput,
                 text: first.map { clip($0.question) } ?? "Claude asked a question",
-                heading: "Claude asks", detail: visible(first?.question ?? "Claude asked a question"),
-                options: isAnswerable ? (first?.options ?? []) + [typeAnswer] : [],
-                alwaysEntry: nil, questions: questions, isAnswerable: isAnswerable, terminalReason: reason, summary: "Asking a question"
+                heading: "Claude asks", detail: fit.detail,
+                options: fit.isAnswerable ? (first?.options ?? []) + [typeAnswer] : [],
+                alwaysEntry: nil, questions: questions, isAnswerable: fit.isAnswerable, fitsCompact: fit.fitsCompact,
+                terminalReason: fit.reason, summary: "Asking a question"
             )
         }
         let subject = ToolSubject.describe(tool: tool, input: toolInput, cwd: cwd)
@@ -80,77 +74,14 @@ struct AskRequest {
         var options = [allowOnce]
         if always != nil { options.append(alwaysAllow) }
         options.append(deny)
-        let raw = fullDetail(tool: tool, input: toolInput)
-        var reason: String?
-        if !isInputExact { reason = terminalOnlyNote }
-        if hasHiddenCharacters(raw) { reason = "\(terminalOnlyNote): it holds hidden characters" }
-        if raw.count > maxDetailCharacters || raw.split(separator: "\n", omittingEmptySubsequences: false).count > maxDetailLines {
-            reason = "\(terminalOnlyNote): it is too long to show here"
-        }
+        let fit = AskDisplay.permission(tool: tool, input: toolInput, cwd: cwd, isInputExact: isInputExact)
         return AskRequest(
             kind: .permission, tool: tool, toolInput: toolInput,
             text: subject.map { "Allow \(tool): \(clip($0))?" } ?? "Allow \(tool)?",
-            heading: "Allow \(tool)?", detail: visible(raw),
-            options: options, alwaysEntry: always, questions: [], isAnswerable: reason == nil, terminalReason: reason,
-            summary: ToolSubject.wantsSummary(tool: tool, subject: subject)
+            heading: "Allow \(tool)?", detail: fit.detail,
+            options: options, alwaysEntry: always, questions: [], isAnswerable: fit.isAnswerable, fitsCompact: fit.fitsCompact,
+            terminalReason: fit.reason, summary: ToolSubject.wantsSummary(tool: tool, subject: subject)
         )
-    }
-
-    /// Everything the tool will act on, unclipped: the command, the file and what goes into it, or the
-    /// input as JSON for any other tool.
-    static func fullDetail(tool: String, input: [String: Any]) -> String {
-        func value(_ key: String, in object: [String: Any] = input) -> String? { BridgeValue.string(object[key]) }
-        switch tool {
-        case "Bash":
-            if let command = value("command") { return command }
-        case "Write":
-            if let path = value("file_path") { return "\(path)\n\n\(value("content") ?? "")" }
-        case "Edit":
-            if let path = value("file_path") {
-                let all = BridgeValue.bool(input["replace_all"]) == true ? " (every occurrence)" : ""
-                return "\(path)\(all)\n--- replace\n\(value("old_string") ?? "")\n+++ with\n\(value("new_string") ?? "")"
-            }
-        case "MultiEdit":
-            if let path = value("file_path") {
-                let edits = (input["edits"] as? [Any] ?? []).compactMap { $0 as? [String: Any] }
-                return ([path] + edits.enumerated().map { index, edit in
-                    "--- edit \(index + 1): replace\n\(value("old_string", in: edit) ?? "")\n+++ with\n\(value("new_string", in: edit) ?? "")"
-                }).joined(separator: "\n")
-            }
-        default:
-            break
-        }
-        guard JSONSerialization.isValidJSONObject(input),
-              let data = try? JSONSerialization.data(withJSONObject: input, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]),
-              let text = String(data: data, encoding: .utf8) else { return "" }
-        return text
-    }
-
-    /// A character the card could not show as itself: a control character other than newline and tab, or
-    /// an invisible format character (bidi overrides and isolates, zero-width joiners, BOM).
-    static func isHidden(_ scalar: Unicode.Scalar) -> Bool {
-        if scalar == "\n" || scalar == "\t" { return false }
-        switch scalar.properties.generalCategory {
-        case .control, .format, .lineSeparator, .paragraphSeparator: return true
-        default: return false
-        }
-    }
-
-    static func hasHiddenCharacters(_ text: String) -> Bool {
-        text.unicodeScalars.contains(where: isHidden)
-    }
-
-    /// Hidden characters spelled out, so the card shows exactly what is there.
-    static func visible(_ text: String) -> String {
-        var result = ""
-        for scalar in text.unicodeScalars {
-            if isHidden(scalar) {
-                result += "\\u{" + String(scalar.value, radix: 16, uppercase: true) + "}"
-            } else {
-                result.unicodeScalars.append(scalar)
-            }
-        }
-        return result
     }
 
     static func parseQuestions(_ input: [String: Any]) -> [AskQuestion] {

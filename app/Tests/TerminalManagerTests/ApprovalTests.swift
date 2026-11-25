@@ -9,6 +9,7 @@ final class ApprovalTests: XCTestCase {
         ]))
         XCTAssertEqual(ask.kind, .permission)
         XCTAssertEqual(ask.text, "Allow Write: hello.txt?")
+        XCTAssertEqual(ask.detail, "hello.txt\nhi")
         XCTAssertEqual(ask.options, ["Allow once", "Always allow", "Deny"])
         XCTAssertEqual(ask.summary, "Wants to write hello.txt")
         let allow = try XCTUnwrap(HookAnswer.output(for: ask, answer: .option(0)))
@@ -57,45 +58,84 @@ final class ApprovalTests: XCTestCase {
 }
 
 final class AskSafetyTests: XCTestCase {
-    func testAMultiLineCommandIsShownWholeOnTheCard() throws {
-        let command = "cd build &&\nmake install\n# then clean\nrm -rf tmp"
-        let ask = try XCTUnwrap(AskRequest.parse(["tool_name": "Bash", "tool_input": ["command": command]]))
-        XCTAssertEqual(ask.detail, command)
-        XCTAssertTrue(ask.isAnswerable)
-        XCTAssertEqual(ask.heading, "Allow Bash?")
-        XCTAssertEqual(ask.text, "Allow Bash: cd build && make install # then clean rm -rf tmp?", "the feed's one line")
+    func fit(_ tool: String, _ input: [String: Any], cwd: String? = "/w/demo", exact: Bool = true) -> AskDisplay.Fit {
+        AskDisplay.permission(tool: tool, input: input, cwd: cwd, isInputExact: exact)
     }
 
-    func testAWriteShowsThePathAndAllOfItsContent() throws {
-        let content = String(repeating: "line\n", count: 120)
-        let ask = try XCTUnwrap(AskRequest.parse(["tool_name": "Write", "tool_input": ["file_path": "/w/a.txt", "content": content]]))
-        XCTAssertEqual(ask.detail, "/w/a.txt\n\n" + content)
-        XCTAssertTrue(ask.isAnswerable)
+    func testAShortCommandIsShownWholeEverywhere() {
+        let result = fit("Bash", ["command": "npm test"])
+        XCTAssertTrue(result.isAnswerable)
+        XCTAssertTrue(result.fitsCompact)
+        XCTAssertEqual(result.detail, "npm test")
     }
 
-    func testHiddenCharactersSendTheCardToTheTerminal() throws {
-        for sneaky in ["echo safe\u{202E}fr- mr", "ls\u{200B}", "printf '\u{1B}[2J'", "a\u{2066}b", "x\r rm -rf ~"] {
-            let ask = try XCTUnwrap(AskRequest.parse(["tool_name": "Bash", "tool_input": ["command": sneaky]]))
-            XCTAssertFalse(ask.isAnswerable, sneaky.debugDescription)
-            XCTAssertNotNil(ask.terminalReason)
-            XCTAssertFalse(ask.detail.unicodeScalars.contains(where: AskRequest.isHidden), "hidden characters are spelled out")
-            XCTAssertNil(HookAnswer.output(for: ask, answer: .option(0)), "no Allow for what the card cannot show")
+    func testEveryOtherKeyIsShownAsJSONBelow() {
+        let result = fit("Bash", ["command": "ls", "description": "List", "timeout": 5])
+        XCTAssertEqual(result.detail, "ls\n{\"description\":\"List\",\"timeout\":5}")
+        XCTAssertTrue(result.isAnswerable)
+        let edit = fit("Edit", ["file_path": "/w/demo/a.py", "old_string": "x = 1", "new_string": "x = 2", "replace_all": true])
+        XCTAssertEqual(edit.detail, "a.py\n- x = 1\n+ x = 2\n{\"replace_all\":true}")
+        let unknown = fit("WebFetch", ["url": "https://example.com", "prompt": "summary"])
+        XCTAssertEqual(unknown.detail, "{\"prompt\":\"summary\",\"url\":\"https://example.com\"}")
+    }
+
+    func testAMultiLineCommandThatFitsKeepsItsLines() {
+        let command = "cd build &&\nmake install"
+        let result = fit("Bash", ["command": command])
+        XCTAssertEqual(result.detail, command)
+        XCTAssertTrue(result.isAnswerable)
+    }
+
+    func testTooWideOrTooTallGoesToTheTerminal() {
+        XCTAssertFalse(fit("Bash", ["command": String(repeating: "a", count: AskDisplay.fullColumns + 1)]).isAnswerable)
+        XCTAssertFalse(fit("Bash", ["command": Array(repeating: "echo", count: AskDisplay.fullLines + 1).joined(separator: "\n")]).isAnswerable)
+        let wideForCompact = fit("Bash", ["command": String(repeating: "a", count: AskDisplay.compactColumns + 1)])
+        XCTAssertTrue(wideForCompact.isAnswerable)
+        XCTAssertFalse(wideForCompact.fitsCompact, "only the wide card gets buttons")
+        XCTAssertFalse(fit("Bash", ["command": String(repeating: "\t", count: 13) + "x"]).isAnswerable, "a tab counts as eight columns")
+        XCTAssertFalse(fit("Write", ["file_path": "/w/demo/f", "content": String(repeating: "line\n", count: 20)]).isAnswerable)
+    }
+
+    func testLongBlankRunsGoToTheTerminal() {
+        XCTAssertFalse(fit("Bash", ["command": "echo safe\n\n\nrm -rf ~"]).isAnswerable, "lines pushed out of view")
+        XCTAssertFalse(fit("Bash", ["command": "echo safe" + String(repeating: " ", count: 8) + "; rm x"]).isAnswerable, "text pushed sideways")
+        XCTAssertFalse(fit("Bash", ["command": "\nls"]).isAnswerable)
+        XCTAssertTrue(fit("Bash", ["command": "a\n\nb"]).isAnswerable, "one blank line is fine")
+    }
+
+    func testBashIsPlainASCIIOnly() {
+        for sneaky in ["echo safe\u{202E}fr- mr", "ls\u{200B}", "printf '\u{1B}[2J'", "a\u{2066}b", "x\r rm -rf ~", "echo caf\u{E9}", "echo \u{3164}", "echo\u{00A0}hi"] {
+            XCTAssertFalse(fit("Bash", ["command": sneaky]).isAnswerable, sneaky.debugDescription)
         }
-        XCTAssertEqual(AskRequest.visible("a\u{202E}b"), "a\\u{202E}b")
-        XCTAssertTrue(try XCTUnwrap(AskRequest.parse(["tool_name": "Bash", "tool_input": ["command": "printf 'a\tb'\n"]])).isAnswerable, "tabs and newlines are fine")
+        XCTAssertTrue(fit("Bash", ["command": "printf 'a\tb'"]).isAnswerable)
     }
 
-    func testInputTooLongToShowIsAnsweredInTheTerminal() throws {
-        let long = String(repeating: "x", count: AskRequest.maxDetailCharacters + 1)
-        let ask = try XCTUnwrap(AskRequest.parse(["tool_name": "Bash", "tool_input": ["command": long]]))
+    func testOtherToolsAllowLettersAndDigitsButNothingInvisible() {
+        XCTAssertTrue(fit("Write", ["file_path": "/w/demo/notes.md", "content": "café 5 東京 ½"]).isAnswerable)
+        let rejected: [String] = [
+            "a\u{0301}", "x\u{200D}y", "\u{FEFF}hi", "a\u{2028}b", "a\u{2029}b", "\u{115F}", "\u{1160}", "\u{3164}", "\u{FFA0}", "\u{2800}",
+            "a\u{00A0}b", "a\u{2003}b", "a\u{034F}b", "\u{1B}[31m", "a\u{7F}", "\u{E000}", "a\u{20DD}", "\u{1F600}",
+        ]
+        for text in rejected {
+            XCTAssertFalse(fit("Write", ["file_path": "/w/demo/f", "content": text]).isAnswerable, text.debugDescription)
+        }
+        XCTAssertFalse(fit("Bash", ["command": "ls", "description": "List\u{202E}"]).isAnswerable, "every string of the input is checked")
+        XCTAssertFalse(fit("WebFetch", ["url\u{200B}": "https://example.com"]).isAnswerable, "keys too")
+    }
+
+    func testInexactNumbersGoToTheTerminal() {
+        XCTAssertFalse(fit("Bash", ["command": "ls"], exact: false).isAnswerable)
+    }
+
+    func testTheCardCarriesTheRule() throws {
+        let ask = try XCTUnwrap(AskRequest.parse(["tool_name": "Bash", "tool_input": ["command": "rm -rf build\u{202E}"]]))
         XCTAssertFalse(ask.isAnswerable)
-        let manyLines = String(repeating: "a\n", count: AskRequest.maxDetailLines + 1)
-        XCTAssertFalse(try XCTUnwrap(AskRequest.parse(["tool_name": "Write", "tool_input": ["file_path": "/f", "content": manyLines]])).isAnswerable)
-    }
-
-    func testAQuestionWithHiddenCharactersIsNotAnswerable() throws {
-        let input: [String: Any] = ["questions": [["question": "Pick\u{202E} one", "options": [["label": "A"]]]]]
-        XCTAssertFalse(try XCTUnwrap(AskRequest.parse(["tool_name": "AskUserQuestion", "tool_input": input])).isAnswerable)
+        XCTAssertEqual(ask.detail, "", "nothing half-shown")
+        XCTAssertNotNil(ask.terminalReason)
+        XCTAssertNil(HookAnswer.output(for: ask, answer: .option(0)), "no Allow for what the card cannot show")
+        let question = try XCTUnwrap(AskRequest.parse(["tool_name": "AskUserQuestion", "tool_input": ["questions": [["question": "Tabs?", "options": [["label": "Yes\u{200B}"]]]]]]))
+        XCTAssertFalse(question.isAnswerable)
+        XCTAssertEqual(question.options, [])
     }
 
     func testAnAnswerGoesOnlyToTheAskTheCardShowed() throws {

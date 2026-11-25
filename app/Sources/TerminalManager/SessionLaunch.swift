@@ -75,10 +75,13 @@ enum SessionLaunch {
         return variables
     }
 
-    /// `claude --permission-mode <mode>` plus either `--session-id <uuid>` (new) or `--resume <uuid>`, and
+    /// `claude --permission-mode <mode> [--plugin-dir <folder>]` plus either `--session-id <uuid>` (new) or `--resume <uuid>`, and
     /// the first prompt as the last argument.
-    static func claudeArguments(claudePath: String, mode: PermissionMode, claudeSessionID: String, isResume: Bool, prompt: String?) -> [String] {
+    /// `--plugin-dir` as well as the variable: a settings `env` block that sets CLAUDE_CODE_PLUGIN_DIRS
+    /// replaces the process's value, while the flag adds the plugin on top of whatever that names.
+    static func claudeArguments(claudePath: String, mode: PermissionMode, claudeSessionID: String, isResume: Bool, prompt: String?, pluginFolder: String? = nil) -> [String] {
         var arguments = [claudePath, "--permission-mode", mode.rawValue]
+        if let pluginFolder { arguments += ["--plugin-dir", pluginFolder] }
         arguments += isResume ? ["--resume", claudeSessionID] : ["--session-id", claudeSessionID]
         if let prompt, !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !isResume {
             arguments.append(prompt)

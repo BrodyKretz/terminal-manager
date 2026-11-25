@@ -14,6 +14,8 @@ struct SessionRuntime {
     var lastLine: String?
     var foreground: String?
     var lastHookAt: Date?
+    /// When tmux was last asked to start or respawn it: a poll taken before that may not show it yet.
+    var launchedAt: Date?
     /// Consecutive registry reads that found the session at its prompt while it looked busy.
     var idleReads = 0
     var interacted = false
@@ -55,7 +57,7 @@ enum SessionView {
             } else {
                 object["ask"] = [
                     "type": "permission", "text": "Claude is waiting for you in the terminal", "heading": "Claude is waiting for you", "detail": "",
-                    "options": [String](), "answerable": false, "reason": "Answer this one in the terminal",
+                    "options": [String](), "answerable": false, "compact": false, "reason": "Answer this one in the terminal",
                 ]
             }
         }
@@ -72,6 +74,7 @@ enum SessionView {
             "options": held.ask.isAnswerable ? held.ask.options : [String](),
             "tool": held.ask.tool,
             "answerable": held.ask.isAnswerable,
+            "compact": held.ask.fitsCompact,
             "reason": held.ask.terminalReason ?? "",
         ]
     }

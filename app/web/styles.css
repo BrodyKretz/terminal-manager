@@ -580,7 +580,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#F3F2F8}
 .scr .askp-term{font-size:var(--f-sm);color:var(--ink3)}
 .scr .top .btn.icon{padding:5px 7px}
 .scr .ask-head{font-weight:600}
-.scr .ask-detail{margin:6px 0 0;padding:7px 9px;font-family:var(--mono);font-size:var(--f-mono-sm);line-height:1.5;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:180px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);color:var(--ink);font-weight:400}
-.scr .wcard .ask-detail,.scr .qa .ask-detail{max-height:110px}
-.scr .askp .ask-detail{max-height:220px}
+.scr .ask-detail{margin:6px 0 0;padding:6px 8px;font-family:var(--mono);font-size:11px;line-height:1.45;white-space:pre;overflow:hidden;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);color:var(--ink);font-weight:400;letter-spacing:0}
 .scr .ask-why{margin-top:6px;font-size:var(--f-sm);color:var(--needs);font-weight:500}
+.scr .qa .ask-detail{font-size:10px;padding:4px 6px}
+.scr[data-style="b"] .wcard:has(.ask-detail){flex-wrap:wrap;align-items:flex-start}
+.scr[data-style="b"] .wc-body:has(.ask-detail){flex:0 0 auto;min-width:170px;white-space:normal;overflow:visible}

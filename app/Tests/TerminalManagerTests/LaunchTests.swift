@@ -66,10 +66,10 @@ final class SessionLaunchTests: XCTestCase {
 
     func testTheCommandNeverGoesThroughZsh() {
         let env = SessionLaunch.environment(login: login, appSession: "abc123", pluginFolder: "/p")
-        let program = SessionLaunch.claudeArguments(claudePath: "/Users/x/.local/bin/claude", mode: .manual, claudeSessionID: "u-1", isResume: false, prompt: "create a file hello.txt containing hi")
+        let program = SessionLaunch.claudeArguments(claudePath: "/Users/x/.local/bin/claude", mode: .manual, claudeSessionID: "u-1", isResume: false, prompt: "create a file hello.txt containing hi", pluginFolder: "/p")
         let command = SessionLaunch.command(environment: env, program: program)
         XCTAssertEqual(Array(command.prefix(2)), ["/usr/bin/env", "-i"])
-        XCTAssertEqual(Array(command.suffix(6)), ["/Users/x/.local/bin/claude", "--permission-mode", "manual", "--session-id", "u-1", "create a file hello.txt containing hi"])
+        XCTAssertEqual(Array(command.suffix(8)), ["/Users/x/.local/bin/claude", "--permission-mode", "manual", "--plugin-dir", "/p", "--session-id", "u-1", "create a file hello.txt containing hi"])
         XCTAssertFalse(command.contains("/bin/zsh"))
         XCTAssertTrue(command.contains("CLAUDE_CODE_PLUGIN_DIRS=/p"))
         XCTAssertFalse(command.contains { $0.contains(".other-tool") })

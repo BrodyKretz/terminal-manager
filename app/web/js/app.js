@@ -233,9 +233,16 @@
       .concat(B.sessions.filter(s => s.status === "ready").sort(byWait));
   }
 
+  /// Answer buttons only where the card shows everything they answer (AskDisplay's rule): the session
+  /// view's card for any answerable ask, the narrow lane and list cards only for compact ones.
+  function canAnswerIn(s, where) {
+    return !!(s.ask && s.ask.answerable && s.ask.options.length && (where === "ans" || s.ask.compact));
+  }
   function optsHTML(s, where, withKbd) {
-    if (!s.ask.answerable || !s.ask.options.length) {
-      return `<button class="opt first" data-act="openTerm" data-sid="${s.id}" data-where="${where}">Answer in its terminal</button>`;
+    if (!canAnswerIn(s, where)) {
+      return s.ask.answerable
+        ? `<button class="opt first" data-act="open" data-sid="${s.id}" data-where="${where}">Open to answer</button>`
+        : `<button class="opt first" data-act="openTerm" data-sid="${s.id}" data-where="${where}">Open terminal</button>`;
     }
     const typingKey = `${where}:${s.id}`;
     return s.ask.options.map((o, i) => {
@@ -246,11 +253,11 @@
   }
   /// What an Allow button approves, in full: every line, nothing clipped. Cards that cannot show it whole
   /// say why and send you to the terminal instead.
-  function askBodyHTML(s) {
+  function askBodyHTML(s, where) {
     const a = s.ask;
-    const detail = a.detail ? `<pre class="ask-detail" tabindex="0">${esc(a.detail)}</pre>` : "";
-    const why = !a.answerable && a.reason ? `<div class="ask-why">${esc(a.reason)}</div>` : "";
-    return `<div class="ask-head">${esc(a.heading || a.text)}</div>${detail}${why}`;
+    if (canAnswerIn(s, where)) return `<div class="ask-head">${esc(a.heading || a.text)}</div><pre class="ask-detail">${esc(a.detail)}</pre>`;
+    const why = a.answerable ? "Too long for this card. Open the session to see it all and answer." : (a.reason || "Answer this one in the terminal");
+    return `${askHTML(a.text)}<div class="ask-why">${esc(why)}</div>`;
   }
   function inrowHTML(key, sid, placeholder, act, label, askId) {
     const ask = askId ? ` data-askid="${esc(askId)}"` : "";
@@ -276,7 +283,7 @@
       const typing = S.typing[`qa:${s.id}`];
       qa = `<div class="qa-wrap"><div class="qa-in"><div class="qa needs">
         <div class="qa-k">Quick answer · ${s.ask.type === "permission" ? "permission" : "question"}</div>
-        <div class="qa-q">${askBodyHTML(s)}</div>
+        <div class="qa-q">${askBodyHTML(s, "qa")}</div>
         <div class="opts">${optsHTML(s, "qa", false)}</div>
         ${typing ? inrowHTML(`qa:${s.id}`, s.id, "Type your answer", "sendTyped", "", s.ask.id) : ""}</div></div></div>`;
     }
@@ -326,7 +333,7 @@
       const typing = S.typing[`lane:${s.id}`];
       html = `<div class="wc-top">${shape(s)}<span class="wc-kind">${s.ask.type === "permission" ? "Needs permission" : "Asked a question"}</span><span class="wc-t" data-tick="since:${s.id}"></span></div>
         <button class="wc-name" data-act="open" data-sid="${s.id}">${esc(s.name)}<small>${esc(s.dir)}</small></button>
-        <div class="wc-body">${askBodyHTML(s)}</div>
+        <div class="wc-body">${askBodyHTML(s, "lane")}</div>
         ${typing ? inrowHTML(`lane:${s.id}`, s.id, "Type your answer", "sendTyped", "", s.ask.id) : `<div class="opts">${optsHTML(s, "lane", false)}</div>`}`;
     } else {
       const { add, del } = fileTotals(s);
@@ -519,9 +526,9 @@
     let out = "";
     if (s.status === "needs_you" && s.ask) {
       const typing = S.typing[`ans:${s.id}`];
-      const n = s.ask.answerable ? s.ask.options.length : 0;
+      const n = canAnswerIn(s, "ans") ? s.ask.options.length : 0;
       out += `<div class="askp" data-ask="${s.id}" data-askid="${esc(s.ask.id || "")}" data-where="ans" tabindex="-1"><div class="askp-k">${shape(s)}${s.ask.type === "permission" ? "Needs permission" : "Asked a question"}<span class="t">waiting <span data-tick="since:${s.id}"></span></span></div>
-        <div class="askp-q">${askBodyHTML(s)}</div>
+        <div class="askp-q">${askBodyHTML(s, "ans")}</div>
         <div class="opts">${optsHTML(s, "ans", n > 0)}<span class="askp-foot">${n ? `Press 1–${n} to choose, or answer in the terminal above` : "The terminal above shows the full prompt"}</span></div>
         ${typing ? inrowHTML(`ans:${s.id}`, s.id, "Type your answer", "sendTyped", "Send answer", s.ask.id) : ""}</div>`;
     } else if (s.status === "ready") {
@@ -848,7 +855,7 @@
   /// `askId` is the ask the clicked card showed; a different current ask is never answered in its place.
   function pickOption(sid, i, where, askId) {
     const s = ses(sid);
-    if (!s || !s.ask || !s.ask.answerable || !askId || i < 0 || i >= s.ask.options.length) return;
+    if (!s || !canAnswerIn(s, where) || !askId || i < 0 || i >= s.ask.options.length) return;
     if (s.ask.id !== askId) { toast({ html: "That prompt changed before your answer. Look again.", ms: 4000 }); schedule(); return; }
     if (/^Type an answer$/i.test(s.ask.options[i])) {
       S.typing[`${where}:${sid}`] = true;

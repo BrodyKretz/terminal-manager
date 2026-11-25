@@ -46,11 +46,41 @@ async function main() {
     await page.waitForSelector('.tsh .xterm-host .xterm-screen');
     await settle();
     check(`${name}: lane shows two asks and one ready`, (await page.$$(".wcard")).length === 3);
-    check(`${name}: list shows five Claude sessions`, (await page.$$(".row")).length === 8);
+    check(`${name}: list shows eight sessions`, (await page.$$(".row")).length === 8);
+    await page.click('.row-main[data-sid="a1"]');
+    await page.waitForSelector(".askp .ask-detail");
+    const askFits = await page.evaluate(() => { const el = document.querySelector(".askp .ask-detail"); return el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1; });
+    check(`${name}: the session ask card shows its whole detail`, askFits);
+    await page.evaluate(() => window.__app.goFeed());
+    await settle();
+    const overflow = await page.evaluate(() => Array.from(document.querySelectorAll(".ask-detail")).filter(el => el.offsetParent && (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1)).map(el => el.textContent));
+    check(`${name}: every shown ask detail fits its box`, overflow.length === 0 && (await page.$$(".wcard .ask-detail")).length === 2, overflow);
+    const budgetFits = await page.evaluate(() => {
+      const hosts = Array.from(document.querySelectorAll(".wcard .wc-body, .row .qa-q"));
+      return hosts.length > 0 && hosts.every(host => {
+        const probe = document.createElement("pre");
+        probe.className = "ask-detail";
+        probe.textContent = Array(5).fill("x".repeat(22)).join("\n");
+        host.appendChild(probe);
+        const fits = probe.scrollWidth <= probe.clientWidth + 1;
+        host.removeChild(probe);
+        return fits;
+      });
+    });
+    check(`${name}: the compact budget (22 columns) fits the narrow cards`, budgetFits);
     await shot(`main-${name}`);
     await page.click('[data-act="trayToggle"][data-sid="t1"]');
   }
 
+  await page.setViewportSize({ width: 1280, height: 800 });
+  for (const style of ["a", "b", "c"]) {
+    await page.goto(`${base}?style=${style}`);
+    await page.waitForFunction(() => window.__app && window.__app.B.ready);
+    await page.evaluate(() => document.fonts.ready);
+    await settle();
+    check(`style ${style} at 1280 wide: compact details fit`, await page.evaluate(() => Array.from(document.querySelectorAll(".ask-detail")).every(el => el.scrollWidth <= el.clientWidth + 1)));
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${base}?style=a`);
   await page.waitForFunction(() => window.__app && window.__app.B.ready);
   await page.evaluate(() => document.fonts.ready);

@@ -19,6 +19,8 @@ final class SessionManager {
     static let pollInterval: TimeInterval = 1
     static let defaultCols = 160
     static let defaultRows = 45
+    /// A session just started or respawned is not judged gone or dead by a poll for this long.
+    static let launchGrace: TimeInterval = 5
 
     let paths: AppPaths
     let tmux: TmuxCommands
@@ -384,7 +386,10 @@ final class SessionManager {
     private func claudeCommand(_ record: SessionRecord, isNew: Bool, prompt: String?) -> [String]? {
         guard let login, let claudePath = login.claudePath, let claudeID = record.claudeSessionID else { return nil }
         let environment = SessionLaunch.environment(login: login.variables, appSession: record.id, pluginFolder: isPluginReady ? paths.pluginFolder.path : nil)
-        let program = SessionLaunch.claudeArguments(claudePath: claudePath, mode: record.mode ?? .default, claudeSessionID: claudeID, isResume: !isNew, prompt: prompt)
+        let program = SessionLaunch.claudeArguments(
+            claudePath: claudePath, mode: record.mode ?? .default, claudeSessionID: claudeID, isResume: !isNew, prompt: prompt,
+            pluginFolder: isPluginReady ? paths.pluginFolder.path : nil
+        )
         return SessionLaunch.command(environment: environment, program: program)
     }
 
@@ -417,6 +422,7 @@ final class SessionManager {
 
     /// Runs in order with every other tmux call; a respawn whose session is gone creates it instead.
     private func runTmux(_ arguments: [String], fallback: [String]?, for id: String) {
+        runtime[id]?.launchedAt = Date()
         tmuxQueue.async { [weak self] in
             var result = ProcessRunner.run(arguments)
             if !result.isSuccess, let fallback { result = ProcessRunner.run(fallback) }
@@ -686,8 +692,9 @@ final class SessionManager {
         let byName = Dictionary(panes.map { ($0.sessionName, $0) }, uniquingKeysWith: { first, _ in first })
         for record in file.sessions {
             let id = record.id
+            let isLaunching = runtime[id]?.launchedAt.map { Date().timeIntervalSince($0) < Self.launchGrace } ?? false
             guard let pane = byName[record.tmuxName] else {
-                if record.status != .exited {
+                if record.status != .exited, !isLaunching {
                     if record.kind == .claude { applyClaude(id, .processExited) } else { setShellStatus(id, .exited, summary: "The terminal went away") }
                 }
                 continue
@@ -699,13 +706,14 @@ final class SessionManager {
             switch record.kind {
             case .claude:
                 if !pane.isDead, runtime[id]?.claudePID == nil { runtime[id]?.claudePID = pane.pid }
-                if pane.isDead, record.status != .exited {
+                if pane.isDead, record.status != .exited, !isLaunching {
                     hooks.release(sessionID: id, because: "its process exited")
                     update(id) { $0.exitCode = pane.deadStatus }
                     applyClaude(id, .processExited)
                     note(id, type: "life") { $0.text = "Claude exited"; $0.detail = pane.deadStatus.map { "code \($0)" } }
                 }
             case .shell:
+                if isLaunching, pane.isDead { continue }
                 if pane.isDead {
                     if record.status != .exited {
                         setShellStatus(id, .exited, summary: "code \(pane.deadStatus ?? 0)", exitCode: pane.deadStatus ?? 0)
