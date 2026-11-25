@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sessions · Activity feed prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="scr" id="scr" data-style="a">
+  <div class="app">
+    <header class="top">
+      <div class="brand"><span class="mark">&gt;_</span>Sessions</div>
+      <div class="tally" id="tally" aria-live="polite"></div>
+      <div class="sp"></div>
+      <button class="btn" id="btnNext" data-act="next">Next needing you<kbd>⌘J</kbd></button>
+      <button class="switch" id="btnDnd" data-act="dnd" role="switch" aria-checked="false"><span class="knob"></span>Do not disturb</button>
+      <button class="btn primary" data-act="new">New session<kbd>⌘N</kbd></button>
+      <div class="styleseg" id="styleSeg" role="radiogroup" aria-label="Styling">
+        <button data-act="style" data-style="a" role="radio">Lavender</button><button data-act="style" data-style="b" role="radio">Log</button><button data-act="style" data-style="c" role="radio">Slate</button>
+      </div>
+    </header>
+    <div class="body">
+      <nav class="list" id="list" aria-label="Sessions">
+        <button class="l-all" id="allAct" data-act="feed"><span class="ico"><i></i><i></i><i></i></span>All activity<span class="r-new" id="allBadge" hidden></span></button>
+        <div id="listItems"></div>
+      </nav>
+      <main class="center" id="center">
+        <div class="feedview" id="feedView">
+          <section class="lane" aria-label="Waiting on you">
+            <div class="lane-head"><h2>Waiting on you</h2><span class="n" id="laneN"></span><span class="hint">Longest wait first</span></div>
+            <div class="lane-cards" id="laneCards"></div>
+            <p class="lane-empty" id="laneEmpty" hidden>Nothing is waiting on you. New asks and finished turns land here.</p>
+          </section>
+          <div class="feedwrap" id="feedwrap">
+            <div class="pillbar"><button class="newpill" id="newPill" data-act="pill" hidden></button></div>
+            <div id="digest"></div>
+            <div class="feed-tools" id="feedTools"></div>
+            <div id="pinnedBox" class="pinned-box" hidden><div class="pinned-h"></div><div id="pinList"></div></div>
+            <div class="evlist" id="evlist" aria-live="off"></div>
+            <p class="feed-empty" id="feedEmpty" hidden>No events match these filters yet.</p>
+          </div>
+        </div>
+        <div class="sv" id="sessionView" hidden></div>
+      </main>
+      <aside class="tray" id="tray" aria-label="Terminals">
+        <div class="tray-h">Terminals <span id="trayN" style="font-family:var(--mono);font-weight:400"></span></div>
+        <div class="tray-list" id="trayList"></div>
+        <button class="tray-new" data-act="newTerminal">New terminal</button>
+      </aside>
+    </div>
+  </div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <div id="modalRoot"></div>
+</div>
+
+<button class="demo-btn" id="demoBtn" aria-expanded="false" aria-controls="demoPanel">Demo</button>
+<div class="demo-panel" id="demoPanel" hidden>
+  <h4>Prototype controls</h4>
+  <p>Not part of the design. Fakes events so you can see how the app reacts. Press ? for shortcuts.</p>
+  <label for="demoSess">Session</label>
+  <select id="demoSess"></select>
+  <div class="row3">
+    <button id="demoNeed">Needs you</button>
+    <button id="demoFinish">Finish</button>
+    <button id="demoFail">Fail</button>
+  </div>
+  <hr>
+  <button class="wide" id="demoOutside">Add an outside session</button>
+  <button class="wide" id="demoHelp">Show keyboard shortcuts</button>
+  <button class="wide" id="demoReset">Reset the demo</button>
+</div>
+
+<script src="../data.js"></script>
+<script src="fake-backend.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

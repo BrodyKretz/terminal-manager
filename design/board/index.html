@@ -1,0 +1,1325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Activity feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html{background:#EDEDF0}
+body{margin:0;background:#EDEDF0;color:#1F2024;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.board{max-width:1280px;margin:0 auto;padding:56px 24px 120px}
+.bd-kicker{font-size:14px;color:#6B6D76;margin:0 0 6px}
+.bd-h1{font-size:40px;line-height:1.15;margin:0 0 18px;font-weight:700;letter-spacing:-.02em}
+.bd-h2{font-size:26px;line-height:1.25;margin:0 0 8px;font-weight:700;letter-spacing:-.01em}
+.bd-h3{font-size:18px;line-height:1.3;margin:0 0 6px;font-weight:650}
+.bd-sec{margin-top:88px}
+.bd-sec>.bd-lead{max-width:72ch;color:#3E4048;margin:0 0 28px}
+.bd-p{max-width:72ch;margin:0 0 12px;color:#30323A}
+.bd-p.sm,.bd-cap{font-size:15px;color:#4A4C55}
+.bd-num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#1F2024;color:#fff;font-size:12.5px;font-weight:700;flex:none}
+.bd-overview{display:grid;grid-template-columns:1.25fr 1fr;gap:48px;align-items:start}
+.bd-wish{background:#fff;border:1px solid #DCDCE2;border-radius:12px;padding:20px 22px}
+.bd-wish ul{margin:0;padding-left:20px}
+.bd-wish li{margin:0 0 10px;color:#30323A}
+.bd-wish b{color:#1F2024}
+.bd-legend{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 32px;margin-top:28px}
+.bd-legend div{display:flex;gap:12px;align-items:flex-start}
+.bd-legend p{margin:0;font-size:15px;color:#3E4048;line-height:1.5}
+.bd-legend b{display:block;color:#1F2024;font-size:15.5px}
+.bd-state{display:grid;gap:28px;align-items:start;margin:0 0 64px}
+.bd-state.two{grid-template-columns:minmax(0,1fr) 340px}
+#f-shell{min-width:0}
+.bd-state.rev{grid-template-columns:340px minmax(0,1fr)}
+.bd-row{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.bd-text{min-width:0}
+.bd-text h4{font-size:15px;margin:16px 0 4px;color:#1F2024}
+.bd-text h4:first-of-type{margin-top:12px}
+.bd-text p{margin:0 0 8px;font-size:15px;color:#3E4048;line-height:1.55}
+.bd-stack{display:flex;flex-direction:column;gap:18px}
+.bd-story{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:center;margin-bottom:22px}
+.bd-step{display:flex;gap:12px}
+.bd-step p{margin:0;font-size:15px;color:#3E4048}
+.bd-step b{color:#1F2024}
+.bd-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.bd-three .bd-cap{margin-top:10px}
+.bd-style{margin-bottom:56px}
+.bd-style-head{display:flex;align-items:baseline;gap:14px;margin-bottom:12px}
+.bd-style-head .bd-h3{margin:0;font-size:22px}
+.bd-style-head span{color:#6B6D76;font-size:15px}
+.bd-style-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:36px;margin-top:18px}
+.bd-swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.bd-sw{background:#fff;border:1px solid #DCDCE2;border-radius:10px;overflow:hidden;font-size:12.5px}
+.bd-sw i{display:block;height:44px;border-bottom:1px solid #E4E4EA}
+.bd-sw span{display:block;padding:6px 9px 7px;line-height:1.35}
+.bd-sw b{display:block;font-weight:600;color:#1F2024}
+.bd-sw code{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:#5A5C66}
+.bd-type{display:flex;gap:28px;margin:14px 0 4px;flex-wrap:wrap}
+.bd-type div{font-size:14px;color:#4A4C55}
+.bd-type .sample{display:block;font-size:22px;color:#1F2024;line-height:1.3}
+.bd-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #DCDCE2;font-size:15px}
+.bd-table th,.bd-table td{text-align:left;padding:10px 16px;border-bottom:1px solid #E7E7EC;vertical-align:top}
+.bd-table th{font-weight:600;background:#F6F6F8;color:#3E4048;font-size:14px}
+.bd-table tr:last-child td{border-bottom:0}
+.bd-table kbd{font-family:"JetBrains Mono",monospace;font-size:13px;background:#F2F2F5;border:1px solid #DCDCE2;border-bottom-width:2px;border-radius:5px;padding:1px 7px;white-space:nowrap}
+.bd-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.bd-card{background:#fff;border:1px solid #DCDCE2;border-radius:12px;padding:20px 22px}
+.bd-card ul{margin:8px 0 0;padding-left:20px}
+.bd-card li{margin-bottom:9px;font-size:15px;color:#3E4048;line-height:1.55}
+.bd-card li b{color:#1F2024}
+.bd-queue{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 6px}
+.bd-queue span{background:#fff;border:1px solid #DCDCE2;border-radius:8px;padding:4px 10px;font-size:14px;font-family:"JetBrains Mono",monospace}
+.bd-queue em{font-style:normal;color:#8A8C95}
+.bd-queue .n{border-left:4px solid #D9480F}
+.bd-queue .r{border-left:4px solid #862E9C}
+.bd-text code,.bd-p code,.bd-step code,.bd-lead code{font-family:"JetBrains Mono",monospace;font-size:.86em;background:#E2E2E8;padding:1px 5px;border-radius:4px}
+.bd-toc{display:flex;flex-wrap:wrap;gap:8px 18px;margin:26px 0 0;padding:0;list-style:none;font-size:14.5px}
+.bd-toc a{color:#3B4BAA;text-decoration:none}
+.bd-toc a:hover{text-decoration:underline}
+
+.frame{position:relative;overflow:hidden;border-radius:12px;box-shadow:0 1px 2px rgba(20,20,30,.06),0 8px 30px rgba(20,20,30,.10);background:#fff}
+.frame>.fin{position:absolute;left:0;top:0;transform-origin:0 0}
+.callout{position:absolute;z-index:40;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#E8590C;color:#fff;font:700 15px/1 system-ui,sans-serif;box-shadow:0 0 0 3px #fff,0 4px 12px rgba(0,0,0,.25)}
+.callbox{position:absolute;z-index:39;border:2px dashed rgba(232,89,12,.85);border-radius:10px;pointer-events:none}
+.cursor{position:absolute;z-index:45;width:18px;height:22px;pointer-events:none}
+
+.scr{--sans:"Instrument Sans",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;--ui:var(--sans);
+  --bg:#F3F2F8;--panel:#EFEEF5;--card:#FFFFFF;--ink:#22212B;--ink2:#5B5968;--ink3:#8E8C9C;--line:#E3E1EC;--line2:#D4D1E0;--hover:#E8E6F0;
+  --needs:#D9480F;--needs-soft:#FDEEE6;--needs-line:#F2C6B2;--needs-tint:#FFFAF7;--work:#3B5BDB;--work-soft:#E8EDFC;--ready:#862E9C;--ready-soft:#F5E9F8;--ready-line:#E2C7EA;--ready-tint:#FDF9FE;--ok:#2B8A3E;--ok-soft:#E6F4EA;
+  --term-bg:#22212B;--term-ink:#E4E2EE;--term-dim:#8D8A9E;--term-args:#B7B4C6;--term-line:#34323F;--term-accent:#9FB4FF;--term-user:#FFD7C2;--term-think:#E0A8F0;
+  --primary:#22212B;--primary-ink:#FFFFFF;--focus:#3B5BDB;
+  --r:10px;--r-sm:7px;--edge:3px;--row-edge:0px;--head-h:56px;--col-l:264px;--col-r:304px;
+  --f-xs:11px;--f-sm:12px;--f-md:13px;--f-base:13.5px;--f-lg:15px;--f-xl:18px;--f-mono:12.5px;--f-mono-sm:11.5px;
+  --ev-cols:52px 150px minmax(0,1fr) 28px;
+  font-family:var(--ui);font-size:var(--f-base);line-height:1.45;color:var(--ink);background:var(--bg);position:relative;-webkit-font-smoothing:antialiased;text-align:left}
+.scr[data-style="b"]{--sans:"JetBrains Mono",ui-monospace,monospace;--ui:var(--mono);
+  --bg:#101114;--panel:#0D0E11;--card:#16181D;--ink:#D5D8DE;--ink2:#9BA1AC;--ink3:#666D79;--line:#22252B;--line2:#30343C;--hover:#1A1D22;
+  --needs:#FF8F57;--needs-soft:#2B1B12;--needs-line:#4D2D1B;--needs-tint:#1A1411;--work:#82A6FF;--work-soft:#18213A;--ready:#CC9CFF;--ready-soft:#241A33;--ready-line:#3E2D57;--ready-tint:#17131D;--ok:#8FD19E;--ok-soft:#14261A;
+  --term-bg:#0B0C0E;--term-ink:#D5D8DE;--term-dim:#6E7480;--term-args:#9BA1AC;--term-line:#22252B;--term-accent:#82A6FF;--term-user:#FFC9A8;--term-think:#CC9CFF;
+  --primary:#D5D8DE;--primary-ink:#101114;--focus:#82A6FF;
+  --r:4px;--r-sm:3px;--edge:2px;--row-edge:2px;--head-h:42px;--col-l:244px;--col-r:300px;
+  --f-xs:10.5px;--f-sm:11px;--f-md:11.5px;--f-base:12px;--f-lg:12.5px;--f-xl:14px;--f-mono:12px;--f-mono-sm:11px;
+  --ev-cols:66px 112px minmax(0,1fr) 24px}
+.scr[data-style="c"]{
+  --bg:#E6E9EE;--panel:#DDE1E7;--card:#FFFFFF;--ink:#0F172A;--ink2:#334155;--ink3:#64748B;--line:#CBD2DC;--line2:#AEB8C6;--hover:#D2D8E1;
+  --needs:#C2410C;--needs-soft:#FFEDE3;--needs-line:#F5B08A;--needs-tint:#FFF7F2;--work:#1D4ED8;--work-soft:#DDE7FF;--ready:#7E22CE;--ready-soft:#F3E8FF;--ready-line:#D8B4FE;--ready-tint:#FBF7FF;--ok:#15803D;--ok-soft:#DCF5E5;
+  --term-bg:#0F172A;--term-ink:#E2E8F0;--term-dim:#94A3B8;--term-args:#CBD5E1;--term-line:#1E293B;--term-accent:#93C5FD;--term-user:#FDBA74;--term-think:#D8B4FE;
+  --primary:#0F172A;--primary-ink:#FFFFFF;--focus:#1D4ED8;
+  --r:8px;--r-sm:6px;--edge:6px;--row-edge:6px;--head-h:64px;--col-l:300px;--col-r:330px;
+  --f-xs:12px;--f-sm:13px;--f-md:14px;--f-base:15px;--f-lg:17px;--f-xl:21px;--f-mono:13.5px;--f-mono-sm:12.5px;
+  --ev-cols:60px 168px minmax(0,1fr) 30px}
+.scr *{box-sizing:border-box}
+.scr button,.scr input{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;text-align:left}
+.scr h2,.scr h3,.scr p{margin:0}
+.scr kbd{font-family:var(--mono);font-size:var(--f-xs);padding:0 5px;border-radius:4px;border:1px solid var(--line2);color:var(--ink3);margin-left:6px;line-height:1.5}
+.scr .app{display:grid;grid-template-rows:var(--head-h) minmax(0,1fr);width:1440px;height:900px}
+.scr .top{display:flex;align-items:center;gap:14px;padding:0 16px 0 20px;border-bottom:1px solid var(--line)}
+.scr .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:var(--f-lg);letter-spacing:-.01em;margin-right:8px}
+.scr .mark{width:22px;height:22px;border-radius:6px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--mono);font-size:10.5px;font-weight:700}
+.scr .tally{display:flex;gap:16px;font-size:var(--f-md);color:var(--ink2)}
+.scr .tally .t{display:flex;align-items:center;gap:7px}
+.scr .tally b{color:var(--ink);font-weight:600}
+.scr .sp{flex:1}
+.scr .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--card);border-radius:var(--r-sm);padding:6px 12px;font-size:var(--f-md);font-weight:500;white-space:nowrap;color:var(--ink)}
+.scr .btn.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.scr .btn.primary kbd{color:inherit;opacity:.7;border-color:currentColor}
+.scr .btn.sm{padding:4px 9px;font-size:var(--f-sm)}
+.scr .btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.scr .btn.danger{color:var(--needs)}
+.scr .btn.danger-fill{background:var(--needs);border-color:var(--needs);color:#fff}
+.scr .btn.off{opacity:.42}
+.scr .btn.icon{padding:5px 7px}
+.scr .btn svg{display:block}
+.scr .switch{display:inline-flex;align-items:center;gap:8px;font-size:var(--f-md);color:var(--ink2);white-space:nowrap}
+.scr .knob{width:28px;height:16px;border-radius:9px;background:var(--line2);position:relative;flex:none}
+.scr .knob::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff}
+.scr .switch.on .knob{background:var(--ink)}
+.scr .switch.on .knob::after{left:14px;background:var(--bg)}
+.scr .switch.on{color:var(--ink);font-weight:600}
+.scr .styleseg{display:flex;border:1px solid var(--line2);border-radius:var(--r-sm);overflow:hidden;background:var(--card);font-size:var(--f-sm)}
+.scr .styleseg span{padding:5px 10px;color:var(--ink2)}
+.scr .styleseg span.on{background:var(--ink);color:var(--bg);font-weight:600}
+.scr .body{display:grid;grid-template-columns:var(--col-l) minmax(0,1fr) var(--col-r);min-height:0}
+
+.scr .shape{width:10px;height:10px;display:inline-block;flex:none}
+.scr .s-needs_you{background:var(--needs);transform:rotate(45deg);width:9px;height:9px;border-radius:1px}
+.scr .s-working{border:2px solid var(--line2);border-top-color:var(--work);border-right-color:var(--work);border-radius:50%}
+.scr .s-ready{background:var(--ready);border-radius:50%}
+.scr .s-reviewed{width:10px;height:6px;border-left:2px solid var(--ok);border-bottom:2px solid var(--ok);transform:rotate(-45deg) translate(1px,-1px)}
+.scr .s-process{width:0;height:0;border-left:9px solid var(--ink2);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.scr .s-idle{border:1.5px solid var(--ink3);border-radius:50%}
+.scr .s-exited{background:var(--ink3);border-radius:1px;width:9px;height:9px}
+.scr .s-exited.bad{background:none;border:2px solid var(--needs)}
+
+.scr .list{border-right:1px solid var(--line);background:var(--panel);padding:12px 10px;overflow:hidden}
+.scr .l-all{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:var(--r-sm);font-weight:600;font-size:var(--f-base)}
+.scr .l-all.on{background:var(--card);box-shadow:0 0 0 1px var(--line2)}
+.scr .l-all .ico{width:14px;height:14px;display:grid;gap:2px}
+.scr .l-all .ico i{display:block;height:2px;background:var(--ink2);border-radius:1px}
+.scr .l-all .r-new{margin-left:auto}
+.scr .l-h{display:flex;align-items:center;gap:6px;font-size:var(--f-sm);font-weight:600;color:var(--ink3);margin:14px 10px 4px}
+.scr .l-h .c{font-family:var(--mono);font-weight:400}
+.scr .l-note{font-size:var(--f-xs);color:var(--ink3);margin:0 10px 6px;line-height:1.4}
+.scr .row{margin-bottom:2px;border-radius:var(--r-sm)}
+.scr .row-main{display:block;width:100%;padding:7px 10px 7px calc(10px - var(--row-edge));border-radius:var(--r-sm);border-left:var(--row-edge) solid transparent}
+.scr .row.on .row-main{background:var(--card);box-shadow:0 0 0 1px var(--line2)}
+.scr .row.hov .row-main{background:var(--hover)}
+.scr .st-needs_you .row-main{border-left-color:var(--needs)}
+.scr .st-ready .row-main{border-left-color:var(--ready)}
+.scr .st-working .row-main{border-left-color:var(--work)}
+.scr .st-exited .row-main{border-left-color:var(--ink3)}
+.scr .r-1{display:flex;align-items:center;gap:8px}
+.scr .r-name{font-weight:600;font-size:var(--f-base);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.scr .r-badge{font-size:var(--f-xs);font-weight:500;color:var(--ink2);border:1px solid var(--line2);border-radius:4px;padding:0 5px;white-space:nowrap}
+.scr .r-new{font-size:var(--f-xs);font-weight:600;color:var(--work);background:var(--work-soft);padding:0 6px;border-radius:9px;white-space:nowrap}
+.scr .r-muted{color:var(--ink3);display:inline-flex}
+.scr .r-time{margin-left:auto;font-family:var(--mono);font-size:var(--f-xs);color:var(--ink3);flex:none}
+.scr .r-sub{display:block;padding-left:18px;font-size:var(--f-sm);color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scr .r-st{font-weight:600;color:var(--ink2)}
+.scr .st-needs_you .r-st{color:var(--needs)}
+.scr .st-ready .r-st{color:var(--ready)}
+.scr .st-working .r-st{color:var(--work)}
+.scr .st-reviewed .r-st{color:var(--ok)}
+.scr .qa{margin:3px 4px 8px 26px;padding:10px 11px;background:var(--card);border:1px solid var(--needs-line);border-radius:var(--r-sm);box-shadow:0 6px 18px rgba(30,20,40,.08)}
+.scr .qa-k{font-size:var(--f-xs);color:var(--ink3);margin-bottom:3px}
+.scr .qa-q{font-size:var(--f-md);font-weight:500;line-height:1.35;margin-bottom:8px}
+.scr .qa-q code{font-family:var(--mono);font-size:var(--f-mono-sm)}
+.scr .opts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.scr .opt{border:1px solid var(--line2);background:var(--card);border-radius:var(--r-sm);padding:4px 10px;font-size:var(--f-sm);font-weight:500;white-space:nowrap}
+.scr .opt.first{background:var(--needs);border-color:var(--needs);color:#fff}
+.scr .opt.pressed{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.scr .opt kbd{margin-left:6px;border:0;padding:0;color:inherit;opacity:.6}
+.scr .closed-row{display:flex;align-items:center;gap:8px;padding:6px 10px}
+.scr .closed-row .nm{font-weight:500;font-size:var(--f-md);color:var(--ink2);white-space:nowrap}
+.scr .closed-row .when{font-size:var(--f-xs);color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.scr .closed-row .btn{padding:2px 8px;font-size:var(--f-xs)}
+.scr .closed-row.hl{background:var(--card);border-radius:var(--r-sm);box-shadow:0 0 0 1px var(--line2)}
+
+.scr .center{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+.scr .lane{padding:14px 20px 14px;border-bottom:1px solid var(--line);flex:none}
+.scr .lane-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.scr .lane-head h2{font-size:var(--f-lg);font-weight:600}
+.scr .lane-head .n{font-family:var(--mono);font-size:var(--f-sm);color:var(--ink3)}
+.scr .lane-head .hint{margin-left:auto;font-size:var(--f-sm);color:var(--ink3)}
+.scr .lane-cards{display:flex;gap:12px;overflow:hidden}
+.scr .wcard{flex:0 0 262px;background:var(--card);border:1px solid var(--line);border-left:var(--edge) solid var(--needs);border-radius:var(--r);padding:11px 13px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.scr .wcard.ready{border-left-color:var(--ready)}
+.scr .wc-top{display:flex;align-items:center;gap:7px;font-size:var(--f-sm);color:var(--ink2)}
+.scr .wc-kind{font-weight:600;color:var(--needs)}
+.scr .ready .wc-kind{color:var(--ready)}
+.scr .wc-t{margin-left:auto;font-family:var(--mono);font-size:var(--f-xs);color:var(--ink3)}
+.scr .wc-name{font-weight:600;font-size:var(--f-md);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scr .wc-name small{font-family:var(--mono);font-weight:400;color:var(--ink3);font-size:var(--f-xs);margin-left:6px}
+.scr .wc-body{font-size:var(--f-base);font-weight:500;line-height:1.35}
+.scr .wc-body code{font-family:var(--mono);font-size:var(--f-mono-sm);background:var(--needs-soft);padding:1px 4px;border-radius:4px}
+.scr .wc-msg{font-size:var(--f-md);color:var(--ink2);font-weight:400;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.scr .wc-files{font-size:var(--f-sm);color:var(--ink3);display:flex;align-items:center;gap:8px}
+.scr .wc-files .btn{margin-left:auto}
+.scr .add{color:var(--ok);font-family:var(--mono)}
+.scr .del{color:var(--needs);font-family:var(--mono)}
+.scr .inrow{display:flex;gap:6px}
+.scr .field{flex:1;min-width:0;border:1px solid var(--line2);border-radius:var(--r-sm);padding:5px 9px;font-size:var(--f-sm);background:var(--card);color:var(--ink3);white-space:nowrap;overflow:hidden}
+.scr .field.filled{color:var(--ink)}
+.scr .field.focus{border-color:var(--work);box-shadow:0 0 0 2px var(--work-soft)}
+.scr .caret{display:inline-block;width:1.5px;height:1.1em;background:var(--ink);vertical-align:-2px;margin-left:1px}
+.scr .sendb{border-radius:var(--r-sm);padding:5px 10px;font-size:var(--f-sm);font-weight:500;background:var(--ready);color:#fff;white-space:nowrap}
+.scr .needs .sendb{background:var(--needs)}
+
+.scr .feedwrap{flex:1;min-height:0;overflow:hidden;padding:14px 20px 24px}
+.scr .digest{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 10px;margin-bottom:14px}
+.scr .dg-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.scr .dg-head h3{font-size:var(--f-base);font-weight:600}
+.scr .dg-head .ago{font-size:var(--f-sm);color:var(--ink3)}
+.scr .dg-head .btn{margin-left:auto}
+.scr .dg-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px}
+.scr .dg-row{display:grid;grid-template-columns:12px 96px minmax(0,1fr);gap:8px;align-items:baseline;padding:4px 6px;border-radius:var(--r-sm);font-size:var(--f-md)}
+.scr .dg-row .shape{transform-origin:center;align-self:center}
+.scr .dg-row .s-needs_you{transform:rotate(45deg)}
+.scr .dg-row b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scr .dg-row span{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scr .dg-row em{font-style:normal;font-weight:600}
+.scr .dg-row.st-needs_you em{color:var(--needs)}
+.scr .dg-row.st-ready em{color:var(--ready)}
+.scr .dg-row.st-working em{color:var(--work)}
+.scr .feed-tools{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.scr .feed-tools h2{font-size:var(--f-lg);font-weight:600;margin-right:6px}
+.scr .chip{border:1px solid var(--line2);border-radius:20px;padding:3px 10px;font-size:var(--f-sm);color:var(--ink2);background:var(--card);white-space:nowrap}
+.scr .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+.scr .chip .n{font-family:var(--mono);font-size:var(--f-xs);opacity:.7;margin-left:4px}
+.scr .feed-tools .live{margin-left:auto;font-size:var(--f-sm);color:var(--ink3);display:flex;align-items:center;gap:6px}
+.scr .feed-tools .live i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.scr .pinned-h{font-size:var(--f-sm);font-weight:600;color:var(--ink3);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+.scr .pinned-box{margin-bottom:12px}
+.scr .ev{display:grid;grid-template-columns:var(--ev-cols);gap:12px;align-items:start;background:var(--card);border:1px solid var(--line);border-left:var(--edge) solid var(--line);border-radius:var(--r-sm);padding:7px 8px 7px 11px;margin-bottom:5px;position:relative}
+.scr .ev.new::before{content:"";position:absolute;left:-11px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--work)}
+.scr .ev.k-ask.pending{border-left-color:var(--needs);border-color:var(--needs-line);border-left-color:var(--needs);background:var(--needs-tint)}
+.scr .ev.k-finished.live{border-color:var(--ready-line);border-left-color:var(--ready);background:var(--ready-tint)}
+.scr .ev.k-you{border-style:dashed;border-left-style:solid;background:transparent}
+.scr .ev.pinned{border-color:var(--line2);box-shadow:0 1px 0 var(--line)}
+.scr .ev-time{font-family:var(--mono);font-size:var(--f-mono-sm);color:var(--ink3);padding-top:2px}
+.scr .ev-time b{font-weight:500;color:var(--ink2)}
+.scr .ev-time .sec{display:none}
+.scr .ev-tag{display:flex;align-items:center;gap:7px;font-weight:600;font-size:var(--f-md);min-width:0;white-space:nowrap;padding-top:1px}
+.scr .ev-tag .nm{overflow:hidden;text-overflow:ellipsis}
+.scr .ev.cont .ev-tag{visibility:hidden}
+.scr .ev-what{min-width:0;font-size:var(--f-base)}
+.scr .ev-kind{display:none}
+.scr .ev-text .v{color:var(--ink2)}
+.scr .ev-text code{font-family:var(--mono);font-size:var(--f-mono-sm);font-weight:600}
+.scr .flag{font-weight:600}
+.scr .flag.needs{color:var(--needs)}
+.scr .flag.ready{color:var(--ready)}
+.scr .flag.ok{color:var(--ok)}
+.scr .ev-q{display:block;font-weight:500;margin-top:2px}
+.scr .ev-ans{display:inline-block;margin-left:6px;font-size:var(--f-sm);color:var(--ok);font-weight:600}
+.scr .ev-detail{display:block;font-family:var(--mono);font-size:var(--f-mono-sm);color:var(--ink3);margin-top:2px;white-space:pre-wrap;word-break:break-word}
+.scr .ev-pin{color:var(--ink3);opacity:0;padding-top:1px;justify-self:end}
+.scr .ev.pinned .ev-pin,.scr .ev.hov .ev-pin{opacity:1}
+.scr .ev.pinned .ev-pin{color:var(--work)}
+.scr .ev.hov{border-color:var(--line2)}
+
+.scr .sv{display:flex;flex-direction:column;flex:1;min-height:0;padding:14px 20px 16px;gap:10px}
+.scr .sv-bar{display:flex;align-items:center;gap:12px;flex:none}
+.scr .back{display:inline-flex;align-items:center;gap:7px;font-size:var(--f-md);font-weight:500;color:var(--ink2);border:1px solid var(--line2);border-radius:var(--r-sm);padding:5px 10px;background:var(--card);white-space:nowrap}
+.scr .back .r-new{margin-left:2px}
+.scr .sv-title{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.scr .sv-title h2{font-size:var(--f-xl);font-weight:600;white-space:nowrap}
+.scr .rename{font-size:var(--f-xl);font-weight:600;border:1.5px solid var(--work);border-radius:6px;padding:1px 8px;background:var(--card);box-shadow:0 0 0 3px var(--work-soft)}
+.scr .pill{display:inline-flex;align-items:center;gap:7px;font-size:var(--f-sm);font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.scr .pill.st-needs_you{background:var(--needs-soft);color:var(--needs)}
+.scr .pill.st-ready{background:var(--ready-soft);color:var(--ready)}
+.scr .pill.st-working{background:var(--work-soft);color:var(--work)}
+.scr .pill.st-reviewed{background:var(--ok-soft);color:var(--ok)}
+.scr .pill.st-process,.scr .pill.st-idle,.scr .pill.st-exited{background:var(--hover);color:var(--ink2)}
+.scr .pill .tm{font-family:var(--mono);font-weight:500}
+.scr .sv-acts{display:flex;gap:6px}
+.scr .sv-meta{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;font-size:var(--f-sm);color:var(--ink2);padding:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);flex:none}
+.scr .m{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.scr .m .k{color:var(--ink3)}
+.scr .m b{font-weight:600;color:var(--ink);font-family:var(--mono);font-size:var(--f-mono-sm)}
+.scr .meter{width:56px;height:6px;border-radius:3px;background:var(--line);overflow:hidden;display:inline-block}
+.scr .meter i{display:block;height:100%;background:var(--work)}
+.scr .meter.hot i{background:var(--needs)}
+.scr .sel{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:6px;padding:1px 7px;background:var(--card);color:var(--ink);font-weight:500}
+.scr .sel::after{content:"";width:5px;height:5px;border-right:1.5px solid var(--ink3);border-bottom:1.5px solid var(--ink3);transform:rotate(45deg) translateY(-2px)}
+.scr .lnk{color:var(--work);font-weight:500}
+.scr .m .dir{font-family:var(--mono);font-size:var(--f-mono-sm);color:var(--ink)}
+.scr .outside{display:flex;gap:12px;align-items:center;background:var(--card);border:1px dashed var(--line2);border-radius:var(--r-sm);padding:9px 12px;font-size:var(--f-md);color:var(--ink2);flex:none}
+.scr .outside b{color:var(--ink)}
+.scr .outside .btn{margin-left:auto}
+.scr .termbox{flex:1;min-height:0;display:flex;flex-direction:column;border-radius:var(--r);overflow:hidden;background:var(--term-bg);border:1px solid var(--term-line)}
+.scr .term{flex:1;min-height:0;font-family:var(--mono);font-size:var(--f-mono);line-height:1.6;padding:12px 16px;color:var(--term-ink);overflow:hidden;white-space:pre-wrap;word-break:break-word;display:flex;flex-direction:column;justify-content:flex-end;background:var(--term-bg)}
+.scr .term>div{flex:none}
+.scr .l-dot{color:var(--term-accent)}
+.scr .l-tool{font-weight:700}
+.scr .l-args{color:var(--term-args)}
+.scr .l-res{color:var(--term-dim)}
+.scr .l-think{color:var(--term-think)}
+.scr .l-user{color:var(--term-user)}
+.scr .l-prompt{color:var(--term-accent)}
+.scr .l-dim{color:var(--term-dim)}
+.scr .tcaret{display:inline-block;width:.6em;height:1.15em;background:var(--term-ink);vertical-align:-3px}
+.scr .cmdline{display:flex;align-items:center;gap:8px;border-top:1px solid var(--term-line);padding:7px 10px 7px 16px;font-family:var(--mono);font-size:var(--f-mono);color:var(--term-ink);flex:none;background:var(--term-bg)}
+.scr .cmdline .pfx{color:var(--term-accent);white-space:nowrap}
+.scr .cmdline .txt{flex:1;white-space:nowrap;overflow:hidden}
+.scr .cmdline .muted{color:var(--term-dim);flex:1;font-family:var(--ui);font-size:var(--f-sm)}
+.scr .tbtn{background:var(--term-line);color:var(--term-ink);border-radius:5px;padding:3px 9px;font-size:var(--f-xs);font-family:var(--ui);white-space:nowrap;font-weight:500}
+.scr .tbtn.warn{background:var(--needs);color:#fff}
+.scr .bottom{flex:none;display:flex;flex-direction:column;gap:10px}
+.scr .askp{background:var(--card);border:1px solid var(--needs-line);border-left:var(--edge) solid var(--needs);border-radius:var(--r);padding:12px 14px}
+.scr .askp-k{display:flex;align-items:center;gap:8px;font-size:var(--f-sm);font-weight:600;color:var(--needs);margin-bottom:4px}
+.scr .askp-k .t{color:var(--ink3);font-weight:400;font-family:var(--mono);font-size:var(--f-xs)}
+.scr .askp-q{font-size:var(--f-lg);font-weight:500;margin-bottom:10px}
+.scr .askp-q code{font-family:var(--mono);font-size:var(--f-mono);background:var(--needs-soft);padding:1px 5px;border-radius:4px}
+.scr .askp .inrow{margin-top:10px}
+.scr .askp .field{padding:7px 10px;font-size:var(--f-md)}
+.scr .askp .sendb{background:var(--needs);padding:7px 14px;font-size:var(--f-md)}
+.scr .askp-foot{font-size:var(--f-xs);color:var(--ink3);margin-left:auto}
+.scr .review{background:var(--card);border:1px solid var(--ready-line);border-left:var(--edge) solid var(--ready);border-radius:var(--r);padding:12px 14px}
+.scr .rv-head{display:flex;align-items:center;gap:12px}
+.scr .rv-head b{font-size:var(--f-base)}
+.scr .rv-head .sum{font-size:var(--f-sm);color:var(--ink3)}
+.scr .rv-head .btn{margin-left:auto}
+.scr .rv-files{margin:9px 0 10px;font-family:var(--mono);font-size:var(--f-mono-sm);border:1px solid var(--line);border-radius:var(--r-sm)}
+.scr .rv-files div{display:flex;gap:12px;padding:5px 10px;border-bottom:1px solid var(--line)}
+.scr .rv-files div:last-child{border-bottom:0}
+.scr .rv-files .p{flex:1;color:var(--ink)}
+.scr .rv-files .bin{color:var(--ink3)}
+.scr .composer{background:var(--card);border:1px solid var(--line2);border-radius:var(--r);padding:9px 12px 8px}
+.scr .composer.focus{border-color:var(--work);box-shadow:0 0 0 3px var(--work-soft)}
+.scr .review .composer{border-radius:var(--r-sm)}
+.scr .cmp-text{min-height:38px;font-size:var(--f-base);color:var(--ink3)}
+.scr .cmp-text.filled{color:var(--ink)}
+.scr .cmp-foot{display:flex;align-items:center;gap:10px;margin-top:4px}
+.scr .cmp-foot .hint{font-size:var(--f-xs);color:var(--ink3)}
+.scr .cmp-foot .btn{margin-left:auto}
+.scr .note{font-size:var(--f-md);color:var(--ink2);background:var(--card);border:1px dashed var(--line2);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:10px}
+.scr .note .btn{margin-left:auto}
+
+.scr .tray{border-left:1px solid var(--line);background:var(--panel);padding:12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.scr .tray-h{display:flex;align-items:center;gap:6px;font-size:var(--f-sm);font-weight:600;color:var(--ink3);margin:0 2px 2px}
+.scr .tsh{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;flex:none}
+.scr .tsh.open{box-shadow:0 0 0 1px var(--line2)}
+.scr .tsh-head{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 11px 3px}
+.scr .tsh-head .nm{font-weight:600;font-size:var(--f-md)}
+.scr .tsh-head .st{font-size:var(--f-xs);color:var(--ink3);white-space:nowrap}
+.scr .tsh-head .st b{font-weight:600;color:var(--ink2)}
+.scr .tsh-last{display:block;font-family:var(--mono);font-size:var(--f-xs);color:var(--ink2);padding:0 11px 9px 33px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scr .tsh .term{font-size:var(--f-xs);padding:8px 11px;max-height:none}
+.scr .tsh .cmdline{font-size:var(--f-xs);padding:6px 8px 6px 11px}
+.scr .tsh-acts{display:flex;gap:6px;padding:7px 10px;align-items:center}
+.scr .tsh-acts .lnk{margin-left:auto;font-size:var(--f-xs)}
+.scr .tray-new{border:1px dashed var(--line2);border-radius:var(--r-sm);padding:8px;font-size:var(--f-md);color:var(--ink2);text-align:center}
+
+.scr .toasts{position:absolute;left:calc(var(--col-l) + 20px);bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:20}
+.scr .toast{display:flex;align-items:center;gap:12px;background:var(--ink);color:var(--bg);border-radius:var(--r);padding:10px 12px 10px 14px;font-size:var(--f-md);box-shadow:0 10px 30px rgba(20,18,30,.25);min-width:320px}
+.scr .toast .shape{box-shadow:0 0 0 2px var(--ink)}
+.scr .toast b{font-weight:600}
+.scr .toast .tb{margin-left:auto;border:1px solid rgba(255,255,255,.3);border-radius:var(--r-sm);padding:3px 10px;font-size:var(--f-sm);font-weight:600}
+.scr[data-style="b"] .toast .tb{border-color:rgba(0,0,0,.25)}
+.scr .toast .x{opacity:.6;font-size:var(--f-sm)}
+.scr .scrim{position:absolute;inset:0;background:rgba(34,33,43,.32);z-index:30;display:flex;justify-content:center;align-items:flex-start;padding-top:110px}
+.scr .modal{width:440px;background:var(--card);border-radius:14px;box-shadow:0 20px 60px rgba(34,33,43,.25),0 0 0 1px var(--line);padding:20px}
+.scr .modal h2{font-size:var(--f-xl);font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.scr .modal h2 kbd{margin-left:auto}
+.scr .modal p.sub{font-size:var(--f-md);color:var(--ink2);margin-bottom:16px;line-height:1.5}
+.scr .stp{border-top:1px solid var(--line);padding:12px 0}
+.scr .stp-h{display:flex;align-items:center;gap:8px;font-size:var(--f-sm);font-weight:600;color:var(--ink2);margin-bottom:8px}
+.scr .stp-h .n{width:18px;height:18px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-size:10.5px;color:var(--ink2)}
+.scr .stp.cur .stp-h .n{background:var(--ink);color:var(--bg)}
+.scr .stp.done .stp-h .n{background:var(--ok);color:#fff}
+.scr .stp-h .val{margin-left:auto;font-weight:500;color:var(--ink);font-family:var(--mono);font-size:var(--f-xs)}
+.scr .stp-h .chg{color:var(--work);font-weight:500;font-size:var(--f-xs)}
+.scr .stp.todo .stp-h{color:var(--ink3);margin-bottom:0}
+.scr .seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.scr .seg2 div{border:1px solid var(--line2);border-radius:9px;padding:9px 11px}
+.scr .seg2 div b{display:block;font-size:var(--f-base)}
+.scr .seg2 div span{font-size:var(--f-sm);color:var(--ink3)}
+.scr .seg2 div.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.scr .dirs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.scr .dirs span{font-family:var(--mono);font-size:var(--f-xs);border:1px solid var(--line2);border-radius:6px;padding:3px 7px;color:var(--ink2)}
+.scr .dirs span.on{background:var(--work-soft);border-color:var(--work);color:var(--work);font-weight:600}
+.scr .pathf{border:1px solid var(--line2);border-radius:8px;padding:7px 10px;font-family:var(--mono);font-size:var(--f-mono-sm);color:var(--ink)}
+.scr .pathf .ok{color:var(--ok);float:right;font-family:var(--ui);font-size:var(--f-xs)}
+.scr .ta{border:1px solid var(--work);box-shadow:0 0 0 3px var(--work-soft);border-radius:8px;padding:8px 10px;font-size:var(--f-md);min-height:58px;margin-bottom:10px}
+.scr .modes{display:flex;flex-direction:column;gap:4px}
+.scr .modes div{display:flex;align-items:center;gap:8px;font-size:var(--f-md);padding:5px 8px;border-radius:6px}
+.scr .modes div i{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--ink3);flex:none}
+.scr .modes div.on{background:var(--hover)}
+.scr .modes div.on i{border:4px solid var(--ink)}
+.scr .modes div span{color:var(--ink3);font-size:var(--f-xs);margin-left:auto}
+.scr .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+.scr .modal.delm{width:420px}
+.scr .modal.delm .what{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:var(--r-sm);padding:9px 11px;font-size:var(--f-md);margin-bottom:14px}
+.scr .modal.delm .what code{font-family:var(--mono);font-size:var(--f-xs);color:var(--ink3);margin-left:auto}
+
+.scr[data-style="b"] .top{gap:12px;padding:0 12px}
+.scr[data-style="b"] .mark{width:18px;height:18px;border-radius:3px;font-size:9px}
+.scr[data-style="b"] .btn{background:transparent}
+.scr[data-style="b"] .btn.primary{background:var(--primary)}
+.scr[data-style="b"] .styleseg{background:transparent}
+.scr[data-style="b"] .list{padding:8px 6px}
+.scr[data-style="b"] .row-main{padding:5px 8px 5px 6px;border-radius:0}
+.scr[data-style="b"] .r-sub{padding-left:18px}
+.scr[data-style="b"] .l-h{margin:12px 8px 3px}
+.scr[data-style="b"] .lane{padding:10px 14px 10px}
+.scr[data-style="b"] .lane-head{margin-bottom:6px}
+.scr[data-style="b"] .lane-cards{flex-direction:column;gap:0;border:1px solid var(--line)}
+.scr[data-style="b"] .wcard{flex:none;flex-direction:row;align-items:center;gap:14px;border:0;border-bottom:1px solid var(--line);border-left:2px solid var(--needs);border-radius:0;padding:6px 10px;background:var(--needs-tint)}
+.scr[data-style="b"] .wcard.ready{background:var(--ready-tint);border-left-color:var(--ready)}
+.scr[data-style="b"] .wcard:last-child{border-bottom:0}
+.scr[data-style="b"] .wc-top{width:196px;flex:none;white-space:nowrap}
+.scr[data-style="b"] .wc-t{margin-left:0;order:-1;width:28px}
+.scr[data-style="b"] .wc-name{width:96px;flex:none}
+.scr[data-style="b"] .wc-name small{display:none}
+.scr[data-style="b"] .wc-body{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
+.scr[data-style="b"] .wc-body code{background:none;padding:0;color:var(--needs)}
+.scr[data-style="b"] .wc-msg{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset}
+.scr[data-style="b"] .wc-files{flex:none}
+.scr[data-style="b"] .wc-files .btn{margin-left:0}
+.scr[data-style="b"] .wcard .inrow{width:200px;flex:none}
+.scr[data-style="b"] .opt{padding:1px 8px;border-radius:2px}
+.scr[data-style="b"] .feedwrap{padding:8px 0 20px}
+.scr[data-style="b"] .digest{margin:0 14px 10px;background:transparent;border-style:dashed}
+.scr[data-style="b"] .feed-tools{padding:0 14px}
+.scr[data-style="b"] .chip{border-radius:2px}
+.scr[data-style="b"] .chip:not(.on){background:transparent}
+.scr[data-style="b"] .pinned-box{border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px}
+.scr[data-style="b"] .pinned-h{padding:0 14px}
+.scr[data-style="b"] .ev{gap:10px;background:none;border:0;border-left:2px solid transparent;border-radius:0;padding:2px 14px 2px 12px;margin:0;align-items:baseline}
+.scr[data-style="b"] .ev.new::before{left:4px;top:9px;width:4px;height:4px}
+.scr[data-style="b"] .ev.k-ask.pending{border-left:2px solid var(--needs);background:var(--needs-tint)}
+.scr[data-style="b"] .ev.k-finished.live{border-left:2px solid var(--ready);background:var(--ready-tint)}
+.scr[data-style="b"] .ev.k-you{background:none;border-left:2px solid transparent}
+.scr[data-style="b"] .ev.pinned{box-shadow:none;border-left:2px solid var(--work)}
+.scr[data-style="b"] .ev-time .sec{display:inline;color:var(--ink3)}
+.scr[data-style="b"] .ev-time b{color:var(--ink3);font-weight:400}
+.scr[data-style="b"] .ev-tag{color:var(--tag);font-weight:500;font-size:var(--f-mono)}
+.scr[data-style="b"] .ev-tag .shape{display:none}
+.scr[data-style="b"] .ev.cont .ev-tag{visibility:visible}
+.scr[data-style="b"] .ev-what{display:flex;gap:10px;white-space:nowrap;overflow:hidden;font-size:var(--f-mono)}
+.scr[data-style="b"] .ev-kind{display:inline-block;width:36px;flex:none;color:var(--ink3)}
+.scr[data-style="b"] .k-ask .ev-kind{color:var(--needs)}
+.scr[data-style="b"] .k-finished .ev-kind{color:var(--ready)}
+.scr[data-style="b"] .k-edit .ev-kind{color:var(--work)}
+.scr[data-style="b"] .k-you .ev-kind{color:var(--ok)}
+.scr[data-style="b"] .ev-text{flex:none;max-width:62%;overflow:hidden;text-overflow:ellipsis}
+.scr[data-style="b"] .ev-text code{font-weight:500}
+.scr[data-style="b"] .ev-q{display:inline;margin:0 0 0 6px}
+.scr[data-style="b"] .ev-detail{display:inline;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.scr[data-style="b"] .ev-detail::before{content:"⎿ "}
+.scr[data-style="b"] .tray{padding:8px}
+.scr[data-style="b"] .tsh{border-radius:0}
+.scr[data-style="b"] .termbox{border-radius:0}
+
+.scr[data-style="c"] .top{gap:18px;padding:0 20px 0 24px;background:var(--card)}
+.scr[data-style="c"] .brand{font-size:var(--f-lg)}
+.scr[data-style="c"] .mark{width:26px;height:26px;font-size:12px}
+.scr[data-style="c"] .tally{font-size:var(--f-base);gap:20px}
+.scr[data-style="c"] .tally b{font-size:var(--f-lg);font-weight:700}
+.scr[data-style="c"] .btn{font-weight:600;border-width:1.5px}
+.scr[data-style="c"] .shape{transform:scale(1.25)}
+.scr[data-style="c"] .s-needs_you{transform:rotate(45deg) scale(1.25)}
+.scr[data-style="c"] .r-name{font-weight:700}
+.scr[data-style="c"] .row-main{padding-top:9px;padding-bottom:9px;margin-bottom:3px;background:var(--card)}
+.scr[data-style="c"] .row.on .row-main{box-shadow:0 0 0 2px var(--ink)}
+.scr[data-style="c"] .l-h{color:var(--ink2)}
+.scr[data-style="c"] .wcard{flex-basis:300px;border-width:1px 1px 1px 6px;padding:13px 15px}
+.scr[data-style="c"] .lane-head h2,.scr[data-style="c"] .feed-tools h2{font-weight:700}
+.scr[data-style="c"] .ev{padding:10px 12px 10px 13px;margin-bottom:6px}
+.scr[data-style="c"] .ev.k-edit{border-left-color:var(--work)}
+.scr[data-style="c"] .ev.k-command{border-left-color:#475569}
+.scr[data-style="c"] .ev.k-finished{border-left-color:var(--ready)}
+.scr[data-style="c"] .ev.k-ask{border-left-color:var(--needs)}
+.scr[data-style="c"] .ev.k-you{border-left-color:#94A3B8}
+.scr[data-style="c"] .ev-kind{display:inline-block;font-size:var(--f-xs);font-weight:700;padding:0 7px;border-radius:4px;margin-right:8px;background:var(--hover);color:var(--ink2);vertical-align:1px}
+.scr[data-style="c"] .k-edit .ev-kind{background:var(--work-soft);color:var(--work)}
+.scr[data-style="c"] .k-ask .ev-kind{background:var(--needs-soft);color:var(--needs)}
+.scr[data-style="c"] .k-finished .ev-kind{background:var(--ready-soft);color:var(--ready)}
+.scr[data-style="c"] .ev-tag{font-weight:700}
+.scr[data-style="c"] .digest{border-width:1px 1px 1px 6px;border-left-color:var(--work)}
+.scr[data-style="c"] .chip{font-weight:600;border-width:1.5px}
+</style>
+</head>
+<body>
+<div class="board">
+
+<section>
+  <p class="bd-kicker">Terminal manager · round 2 · design 09</p>
+  <h1 class="bd-h1">Activity feed</h1>
+  <div class="bd-overview">
+    <div>
+      <p class="bd-p">One window that hosts every Claude Code session and terminal, organised around a single live stream of what they're doing. Every session's tool calls, questions, finished turns and your own replies land in one reverse-chronological feed, with a pinned "Waiting on you" lane above it so blocking items never scroll away.</p>
+      <p class="bd-p">It suits someone running five or more Claude sessions in parallel who mostly supervises: you glance at the feed to see who's progressing, answer what's blocked, and only dive into a full session when you need to steer it. Clicking any session in the left list swaps the feed for that session's full view; "All activity" brings the feed back, and it has kept recording the whole time.</p>
+    </div>
+    <div class="bd-wish">
+      <p class="bd-h3">How it answers the brief</p>
+      <ul>
+        <li><b>A list of all sessions on the left.</b> Grouped Claude / Outside the app / Terminals / Recently closed, each row with a status shape, status word, elapsed time and a "new" count.</li>
+        <li><b>Click one to get into it and use it.</b> The centre becomes that session: transcript, composer, permission prompts, changed-file review, lifecycle controls.</li>
+        <li><b>Always clear what's ready and what isn't.</b> Header counts, the Waiting on you lane, status shapes that differ by form not just colour, and ⌘J to jump straight to the next thing that needs you.</li>
+      </ul>
+    </div>
+  </div>
+  <ul class="bd-toc">
+    <li><a href="#main">Main screen</a></li><li><a href="#states">Key states</a></li><li><a href="#stylings">Three stylings</a></li><li><a href="#features">Features of its own</a></li><li><a href="#interaction">Interaction notes</a></li><li><a href="#tradeoffs">Trade-offs</a></li>
+  </ul>
+</section>
+
+<section class="bd-sec" id="main">
+  <h2 class="bd-h2">Main screen, annotated</h2>
+  <p class="bd-lead">The default view at 1440×900 in styling a (Lavender). Three columns: the session list, the cross-session feed, and a tray of live terminals. Nothing here is a separate window.</p>
+  <div id="f-main"></div>
+  <div class="bd-legend" id="legend"></div>
+</section>
+
+<section class="bd-sec" id="states">
+  <h2 class="bd-h2">Key states</h2>
+  <p class="bd-lead">Each state shown as it appears on screen, cropped where a close-up explains it better than the whole window.</p>
+
+  <h3 class="bd-h3">A session that needs you: permission prompt, and the quick answer from the row</h3>
+  <div class="bd-state rev">
+    <div id="f-qa"></div>
+    <div id="f-perm"></div>
+  </div>
+  <div class="bd-cols" style="margin:-40px 0 64px">
+    <div class="bd-text">
+      <h4>Quick answer from the list (left)</h4>
+      <p>Hovering or keyboard-focusing a "Needs you" row unfolds the prompt right under it with its options. "Allow once" is filled because it's the safest yes; Always allow and Deny sit beside it. You never leave the feed, which is the point: permission prompts are usually a two-second decision.</p>
+      <p>The row's sub-line always carries the status word ("Needs you · Wants to run npm run build"), so the state reads in greyscale too.</p>
+    </div>
+    <div class="bd-text">
+      <h4>Inside the session (right)</h4>
+      <p>Clicking api-server swaps the centre to its full view. The transcript ends on the pending tool call, and the prompt docks at the bottom where the composer normally sits, because nothing else can happen until it's answered. Number keys 1–3 pick an option.</p>
+      <p>What happens next: the choice is echoed as <code>&gt; Allow once</code>, the status flips to Working with a live timer, the tool output streams in, and the session lands at Ready for review. The matching ask in the feed is stamped "Allowed once" so the history stays honest.</p>
+    </div>
+  </div>
+
+  <h3 class="bd-h3">A question with "Type an answer"</h3>
+  <div class="bd-state two">
+    <div id="f-question"></div>
+    <div class="bd-text">
+      <p>mailer asks something Claude can't infer: 7:00 or 8:00? The preset answers are buttons; "Type an answer" is a button too, and pressing it opens a text field under the options, pre-focused, without hiding them, so you can still change your mind and click 8:00.</p>
+      <h4>What happens next</h4>
+      <p>Enter sends. Your answer appears in the transcript as <code>&gt; 8:00, but skip weekends</code> and in the feed as a dashed "From you" event, then the session works and replies. The same field exists on the lane card and in the row's quick answer, so free-text answers never require opening the session.</p>
+    </div>
+  </div>
+
+  <h3 class="bd-h3">Talking to a Claude session</h3>
+  <p class="bd-p sm" style="margin-bottom:18px">A three-step storyboard on web-app, from typing a message to the reply landing.</p>
+  <div class="bd-story"><div id="f-talk1"></div><div class="bd-step"><span class="bd-num">1</span><p><b>Compose.</b> The composer sits under the transcript. Enter sends, Shift+Enter adds a line. Because web-app is Ready, the composer lives inside the review panel and doubles as "Send feedback".</p></div></div>
+  <div class="bd-story"><div id="f-talk2"></div><div class="bd-step"><span class="bd-num">2</span><p><b>Working.</b> Your line is echoed as <code>&gt; …</code>, the status pill turns blue with a live elapsed timer (0:06), and Claude Code's own <code>✻ Working… (6s · esc to interrupt)</code> line sits at the bottom of the transcript. Stop becomes available in the header. The feed records "You replied" at the same moment.</p></div></div>
+  <div class="bd-story"><div id="f-talk3"></div><div class="bd-step"><span class="bd-num">3</span><p><b>Reply streams in.</b> About three seconds later the reply arrives line by line; each ⏺ line also becomes a feed event. When the turn ends the status settles on Ready for review and, because you talked to it, a toast says so (see Notifications below). The "All activity" button counts what the feed gathered meanwhile ("4 new").</p></div></div>
+
+  <h3 class="bd-h3" style="margin-top:48px">Ready for review: changed files, Looks good, Send feedback</h3>
+  <div class="bd-state two">
+    <div id="f-review"></div>
+    <div class="bd-text">
+      <p>A Ready session shows a review panel instead of a bare composer: every file the turn touched with its additions and removals (binary files labelled as such), a one-line total, and two ways out.</p>
+      <h4>Looks good</h4>
+      <p>Marks the turn reviewed. The session drops out of the Waiting on you lane and its row turns to a green check with the word "Reviewed", a quiet state that means "nothing owed". It doesn't send anything to Claude.</p>
+      <h4>Send feedback</h4>
+      <p>The composer inside the panel. Sending puts the session back to Working exactly like any other message.</p>
+    </div>
+  </div>
+
+  <h3 class="bd-h3">Shells: a running process, the command line, and an exited shell</h3>
+  <div class="bd-state two">
+    <div id="f-shell"></div>
+    <div id="f-tray"></div>
+  </div>
+  <div class="bd-cols" style="margin:-40px 0 64px">
+    <div class="bd-text">
+      <h4>Running process (left)</h4>
+      <p>dev server is running <code>npm run dev</code>. Its command line is replaced by a plain note ("npm run dev is running") and a Stop (⌃C) button, because typing into a server's stdin is rarely what you mean. ⌃C works too. After stopping, <code>^C</code> prints, the prompt returns and the status becomes Idle.</p>
+    </div>
+    <div class="bd-text">
+      <h4>Terminal tray (right)</h4>
+      <p>Each shell is a collapsible card showing its last line. Expanded, zsh has a live command line: Enter echoes the command after the prompt and prints its output. The exited pytest shell gets a hollow red square, the words "Exited · code 1", and Restart (re-runs <code>pytest</code>) or Remove (moves it to Recently closed).</p>
+    </div>
+  </div>
+
+  <h3 class="bd-h3">New session, step by step</h3>
+  <div class="bd-three" id="f-new"></div>
+  <p class="bd-p sm" style="margin-top:16px">⌘N (or the header button) opens one sheet that unfolds in order. Step 1 picks the kind; picking Terminal skips step 3 and creates a zsh at the chosen folder. Step 2 offers recent directories as chips and a typed path that validates as you type. Step 3, Claude only, takes an optional first prompt and a permission mode with a one-line explanation of each. Create adds the session to the list and opens it; with a first prompt it starts Working immediately.</p>
+
+  <h3 class="bd-h3" style="margin-top:56px">Delete, Recently closed, Resume</h3>
+  <div class="bd-state two">
+    <div id="f-delete"></div>
+    <div id="f-closed"></div>
+  </div>
+  <div class="bd-cols" style="margin:-40px 0 64px">
+    <div class="bd-text">
+      <h4>Confirmation (left)</h4>
+      <p>Delete always asks, in-page, and says plainly what happens: "Ends the process. Claude sessions can be resumed later from Recently closed." The button names the consequence ("End and delete") rather than "OK". Rename, Restart and Stop sit next to Delete in the session header and never ask.</p>
+    </div>
+    <div class="bd-text">
+      <h4>Recently closed (right)</h4>
+      <p>Deleted api-server moves to the bottom group with "just now". Claude sessions get Resume, which brings them back as Ready with the conversation intact; terminals get Reopen, a fresh zsh in the same folder. The feed keeps a "Deleted" event so the stream still explains where it went.</p>
+    </div>
+  </div>
+
+  <h3 class="bd-h3">A session running outside the app</h3>
+  <div class="bd-state two">
+    <div id="f-outside"></div>
+    <div class="bd-text">
+      <p>scheduler was started in Terminal.app, not here, so the app doesn't own its process. It learns about it through Claude Code hooks: status changes, tool calls and permission prompts arrive as events, so scheduler appears in the feed and the lane like anything else.</p>
+      <h4>What you can do</h4>
+      <p>Answer its permission prompts and questions (the hook relays your choice), read its activity, rename its label, toggle its bell, and "Show its window" to bring the Terminal.app window forward.</p>
+      <h4>What you can't</h4>
+      <p>Type to it, restart, stop or delete it. Rather than greying those out with no reason, the header simply doesn't show them, and a dashed banner explains why. It sits in its own "Outside the app" group in the list with a Terminal.app badge.</p>
+    </div>
+  </div>
+
+  <h3 class="bd-h3">Notifications and ⌘J</h3>
+  <div id="f-header" style="margin-bottom:20px"></div>
+  <div class="bd-state two">
+    <div id="f-toast"></div>
+    <div class="bd-text">
+      <h4>Toasts</h4>
+      <p>When a session you talked to finishes its turn, a small toast appears over the feed's bottom-left: "web-app is ready for review" with an Open button. Sessions you haven't touched don't toast; their changes are already visible in the lane and the feed.</p>
+      <h4>Bell and Do not disturb</h4>
+      <p>Every session header has a bell; muting it shows a struck-through bell on its list row so you remember why it's quiet. The header's Do not disturb switch silences all toasts without hiding anything in the feed.</p>
+      <h4>⌘J: next needing you</h4>
+      <p>Jumps through the queue in order of who's waited longest: needs-you sessions first, then ready ones.</p>
+      <div class="bd-queue"><span class="n">mailer 6m</span><em>then</em><span class="n">api-server 2m</span><em>then</em><span class="n">scheduler 1m</span><em>then</em><span class="r">web-app 11m</span></div>
+      <p>When the queue is empty, ⌘J says "Nothing needs you" in a toast instead of doing nothing.</p>
+    </div>
+  </div>
+</section>
+
+<section class="bd-sec" id="stylings">
+  <h2 class="bd-h2">Three stylings</h2>
+  <p class="bd-lead">Same layout and same moment in time, three treatments. A segmented control in the header switches between them; <code>?style=a|b|c</code> picks one by URL.</p>
+  <div id="styles"></div>
+</section>
+
+<section class="bd-sec" id="features">
+  <h2 class="bd-h2">Features of its own</h2>
+  <p class="bd-lead">Two ideas that only make sense because everything is already one stream of events.</p>
+
+  <h3 class="bd-h3">1. Since you last looked</h3>
+  <div class="bd-state two">
+    <div id="f-digest"></div>
+    <div class="bd-text">
+      <p><b>Problem.</b> With six sessions, coming back from a coffee means scrolling a feed of forty events to reconstruct who did what. The feed is great at "now" and bad at "while I was away".</p>
+      <p><b>What it does.</b> A card at the top of the feed rolls up each session's events since you last looked at it: "2 edits, 1 command" plus its state now ("waiting on a permission"). Sessions with nothing new are left out. Each line opens that session.</p>
+      <p><b>How "looked" is defined.</b> Per session: opening a session marks it seen. "Mark all seen" resets everything. Unseen events in the stream also get a small blue dot, and list rows show "3 new".</p>
+    </div>
+  </div>
+
+  <h3 class="bd-h3">2. Pins and event-type filters</h3>
+  <div class="bd-state two">
+    <div id="f-pins"></div>
+    <div class="bd-text">
+      <p><b>Problem.</b> Useful one-off lines get buried: the preview URL web-app printed, the bug scheduler said it found, the test count chess-app reported. In a terminal they scroll away; in a feed they scroll away faster.</p>
+      <p><b>Pins.</b> Hovering any event reveals a pin. Pinned events stay in a small strip above the stream until you unpin them, across all sessions, so the feed doubles as a scratch board of things to come back to.</p>
+      <p><b>Filters.</b> Chips narrow the stream to Asks, Edits, Commands, Finished or From you, each with a count. "Edits" across six sessions is a fast way to see which files are changing before you review anything.</p>
+    </div>
+  </div>
+</section>
+
+<section class="bd-sec" id="interaction">
+  <h2 class="bd-h2">Interaction notes</h2>
+  <div class="bd-cols">
+    <div>
+      <p class="bd-h3" style="margin-top:14px">Keyboard</p>
+      <table class="bd-table">
+        <tr><th>Keys</th><th>Does</th></tr>
+        <tr><td><kbd>⌘J</kbd></td><td>Next session needing you, then ready ones</td></tr>
+        <tr><td><kbd>⌘N</kbd></td><td>New session sheet</td></tr>
+        <tr><td><kbd>⌘0</kbd></td><td>Back to All activity</td></tr>
+        <tr><td><kbd>⌘1</kbd>…<kbd>⌘9</kbd></td><td>Open the nth session in the list</td></tr>
+        <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Pick an option on the focused prompt</td></tr>
+        <tr><td><kbd>⏎</kbd> / <kbd>⇧⏎</kbd></td><td>Send / new line in the composer</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Interrupt a working session (as in Claude Code); closes sheets</td></tr>
+        <tr><td><kbd>⌃C</kbd></td><td>Stop a shell's foreground process</td></tr>
+        <tr><td><kbd>F2</kbd></td><td>Rename the open session inline</td></tr>
+        <tr><td><kbd>P</kbd></td><td>Pin or unpin the focused feed event</td></tr>
+      </table>
+    </div>
+    <div class="bd-stack">
+      <div class="bd-card">
+        <p class="bd-h3">Motion</p>
+        <ul>
+          <li><b>New feed events</b> slide in at the top with a one-second tint that fades, so your eye catches arrivals without anything blinking.</li>
+          <li><b>Lane cards</b> collapse sideways when answered, which reads as "handled" and keeps the remaining cards stable.</li>
+          <li><b>The working shape</b> is a slowly spinning ring; it's the only perpetual motion on screen, so "something is running" is visible from across the room.</li>
+          <li><b>Reduced motion</b> replaces the spinner with a dotted ring and the slide-ins with instant appearance.</li>
+        </ul>
+      </div>
+      <div class="bd-card">
+        <p class="bd-h3">Noticing status changes</p>
+        <ul>
+          <li>Header counts update in place; the lane gains or loses a card; the list re-sorts so needs-you rows float to the top of their group.</li>
+          <li>Each status has its own shape and word: diamond Needs you, spinning ring Working, dot Ready, check Reviewed, triangle Running, ring Idle, square Exited.</li>
+          <li>Toasts only for sessions you talked to, never during Do not disturb, never for muted bells.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bd-sec" id="tradeoffs">
+  <h2 class="bd-h2">Trade-offs</h2>
+  <div class="bd-cols">
+    <div class="bd-card">
+      <p class="bd-h3">Strengths</p>
+      <ul>
+        <li><b>Supervising is cheap.</b> You can watch six sessions progress without opening any of them, and answer most prompts from the lane or a row.</li>
+        <li><b>History is free.</b> The feed is an audit log: what ran, what you allowed, when it finished.</li>
+        <li><b>Cross-session questions get answers.</b> "Which sessions touched files?" is one filter chip.</li>
+        <li><b>Outside sessions fit naturally,</b> since hooks deliver exactly the events a feed is made of.</li>
+      </ul>
+    </div>
+    <div class="bd-card">
+      <p class="bd-h3">Weaknesses</p>
+      <ul>
+        <li><b>Interleaving is noisy.</b> Consecutive events from one session are grouped, but a busy feed still splits each session's story into fragments.</li>
+        <li><b>Two places to look.</b> The feed summarises; real work happens in the session view. Some people will want the transcript always visible.</li>
+        <li><b>The lane competes for height</b> on smaller screens; above four cards it scrolls sideways, which hides some.</li>
+      </ul>
+    </div>
+    <div class="bd-card">
+      <p class="bd-h3">With 15+ sessions</p>
+      <ul>
+        <li>The list stays usable because it sorts by status within groups; Reviewed and Idle rows could collapse into a "quiet" fold.</li>
+        <li>The feed gets loud. Read-tool events should collapse into "read 6 files" and a per-session mute should hide a chatty session from the feed without silencing its asks.</li>
+        <li>The lane becomes a count plus the oldest three cards; ⌘J does the rest.</li>
+      </ul>
+    </div>
+    <div class="bd-card">
+      <p class="bd-h3">Decide before building</p>
+      <ul>
+        <li>Event granularity: which hook events become feed rows, and which collapse or stay hidden.</li>
+        <li>How long the feed persists: this run only, or a day of history across app restarts.</li>
+        <li>Whether "seen" is per session (as drawn) or a single global checkpoint.</li>
+        <li>Whether the terminal tray stays a third column or becomes a drawer to give the feed more width.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script src="../data.js"></script>
+<script>
+const NOW = new Date(); NOW.setHours(14, 40, 0, 0);
+const TAGS = ["#7AA2F7", "#F7768E", "#9ECE6A", "#E0AF68", "#BB9AF7", "#7DCFFF", "#FF9E64", "#73DACA", "#C0CAF5", "#F4B8E4"];
+const TAG = {}; TM.sessions.forEach((s, i) => TAG[s.id] = TAGS[i % TAGS.length]);
+const STATUS = Object.assign({}, TM.statuses, { reviewed: { label: "Reviewed" } });
+const VERB = { Read: "Read", Update: "Edited", Edit: "Edited", Write: "Wrote", Bash: "Ran" };
+const clone = x => JSON.parse(JSON.stringify(x));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const mins = str => { let m = 0; const re = /(\d+)\s*([hm])/g; let x; while ((x = re.exec(str || ""))) m += +x[1] * (x[2] === "h" ? 60 : 1); return m; };
+const pad = n => String(n).padStart(2, "0");
+const IC = {
+  bell: '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2.2a3.8 3.8 0 0 0-3.8 3.8v2.4L3 10.6h10l-1.2-2.2V6A3.8 3.8 0 0 0 8 2.2ZM6.4 12.4a1.7 1.7 0 0 0 3.2 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  bellOff: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 2.2a3.8 3.8 0 0 0-3.8 3.8v2.4L3 10.6h10l-1.2-2.2V6A3.8 3.8 0 0 0 8 2.2ZM6.4 12.4a1.7 1.7 0 0 0 3.2 0M2.5 2.5l11 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  pin: '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M10 2l4 4-1.6.6-2.6 2.6.3 2.8-1.1 1.1L6.4 10.5 3 14M5.5 9.6 3 7.1l1.1-1.1 2.8.3L9.4 3.6Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  pinOn: '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M10 2l4 4-1.6.6-2.6 2.6.3 2.8-1.1 1.1-6-6 1.1-1.1 2.8.3L9.4 3.6Z" fill="currentColor"/><path d="M6.4 10.5 3 14" stroke="currentColor" stroke-width="1.4"/></svg>'
+};
+
+function world(over, mutate) {
+  const w = Object.assign({
+    S: clone(TM.sessions), closed: clone(TM.recentlyClosed), style: "a", view: "feed", hover: null, typing: {},
+    open: ["t2"], toasts: [], modal: null, dnd: false, badge: 0, filter: "all", pins: ["c4:2"], compose: {},
+    extra: [], renaming: null, timer: {}, evHover: null, closedHl: null, muted: []
+  }, over || {});
+  if (mutate) mutate(w);
+  w.byId = id => w.S.find(s => s.id === id);
+  w.events = seed(w);
+  return w;
+}
+
+function cat(e) {
+  if (e.type === "tool") return e.tool === "Bash" ? "command" : /^(Update|Edit|Write)$/.test(e.tool) ? "edit" : "other";
+  if (e.type === "cmd") return "command";
+  if (e.type === "perm" || e.type === "ask") return "ask";
+  if (e.type === "done") return "finished";
+  if (e.type === "you") return "you";
+  return "other";
+}
+function kindLabel(e) {
+  return ({ edit: "edit", command: "run", ask: "ask", finished: "done", you: "you" })[cat(e)] || (e.type === "say" ? "note" : e.type === "think" ? "think" : e.type === "tool" ? "read" : "info");
+}
+
+function seed(w) {
+  const all = [];
+  w.S.forEach(s => {
+    const out = [];
+    if (s.kind === "shell") {
+      const cmdLine = s.lines.find(l => l.includes("% "));
+      const cmd = cmdLine ? cmdLine.split("% ").pop().replace("█", "") : s.command;
+      if (cmd) out.push({ type: "cmd", text: cmd, detail: s.lines.filter(l => l !== cmdLine && !l.endsWith("█") && !l.startsWith("[process")).join("\n") });
+      if (s.status === "exited") out.push({ type: "exit", code: s.exitCode });
+    } else {
+      let cur = null;
+      for (const line of s.lines) {
+        if (line.startsWith("⏺ ")) {
+          const body = line.slice(2), m = /^(\w+)\((.*)\)$/.exec(body);
+          cur = m ? { type: "tool", tool: m[1], args: m[2], detail: "" } : { type: "say", text: body, detail: "" };
+          out.push(cur);
+        } else if (line.startsWith("✻")) {
+          if (s.status === "working") out.push({ type: "think", text: line.replace(/^✻\s*/, "") });
+        } else if (line.startsWith("> ")) {
+          cur = null;
+        } else if (cur && !/Waiting for permission/.test(line)) {
+          cur.detail += (cur.detail ? "\n" : "") + line.replace(/^\s*⎿\s?/, "").trim();
+        }
+      }
+      if (s.status === "needs_you" && s.ask) out.push({ type: s.ask.type === "permission" ? "perm" : "ask", text: s.ask.text, pending: true });
+      else if (s.status === "ready") out.push({ type: "done", live: true });
+    }
+    const endMin = s.status === "working" ? 0.35 : mins(s.since);
+    const end = NOW - endMin * 60000;
+    const n = out.length;
+    out.forEach((e, i) => all.push(Object.assign(e, { sid: s.id, key: `${s.id}:${i}`, at: new Date(end - (n - 1 - i) * 42000 - (i * 7 % 13) * 1000) })));
+  });
+  w.extra.forEach((e, i) => all.push(Object.assign({ key: `x:${i}` }, e, { at: new Date(+NOW + (e.plus || 0) * 1000) })));
+  const seenAt = NOW - 15 * 60000;
+  all.forEach(e => { e.isNew = e.at > seenAt; e.pinned = w.pins.includes(e.key); });
+  return all.sort((a, b) => b.at - a.at);
+}
+
+const shape = s => `<span class="shape s-${s.status}${s.status === "exited" && s.exitCode ? " bad" : ""}" aria-hidden="true"></span>`;
+const shapeSt = st => `<span class="shape s-${st}" aria-hidden="true"></span>`;
+const sinceOf = (w, s) => w.timer[s.id] || s.since;
+const askHTML = t => esc(t).replace(/(Bash|Edit): (.+)\?$/, "$1: <code>$2</code>?");
+
+function header(w) {
+  const c = st => w.S.filter(s => s.status === st).length;
+  return `<header class="top">
+    <div class="brand"><span class="mark">&gt;_</span>Sessions</div>
+    <div class="tally">
+      <span class="t">${shapeSt("needs_you")}<b>${c("needs_you")}</b> need you</span>
+      <span class="t">${shapeSt("ready")}<b>${c("ready")}</b> ready</span>
+      <span class="t">${shapeSt("working")}<b>${c("working")}</b> working</span>
+      <span class="t">${shapeSt("process")}<b>${c("process")}</b> running</span>
+    </div>
+    <div class="sp"></div>
+    <button class="btn" data-c="next">Next needing you<kbd>⌘J</kbd></button>
+    <span class="switch ${w.dnd ? "on" : ""}" data-c="dnd"><span class="knob"></span>Do not disturb</span>
+    <button class="btn primary" data-c="new">New session<kbd>⌘N</kbd></button>
+    <div class="styleseg">${[["a", "Lavender"], ["b", "Log"], ["c", "Slate"]].map(([k, n]) => `<span class="${w.style === k ? "on" : ""}">${n}</span>`).join("")}</div>
+  </header>`;
+}
+
+function newCount(w, id) { return w.events.filter(e => e.sid === id && e.isNew && e.type !== "think").length; }
+
+function rowHTML(w, s) {
+  const sub = s.kind === "shell"
+    ? (s.status === "process" ? s.command : s.status === "exited" ? `code ${s.exitCode}` : s.dir)
+    : s.summary;
+  const label = s.status === "exited" ? "Exited" : STATUS[s.status].label;
+  const nNew = w.view === "feed" ? newCount(w, s.id) : 0;
+  const hov = w.hover === s.id;
+  const qa = hov && s.ask ? `<div class="qa">
+      <div class="qa-k">Quick answer · ${esc(s.ask.type === "permission" ? "permission" : "question")}</div>
+      <div class="qa-q">${askHTML(s.ask.text)}</div>
+      <div class="opts">${s.ask.options.map((o, i) => `<span class="opt ${i === 0 ? "first" : ""}">${esc(o)}</span>`).join("")}</div></div>` : "";
+  return `<div class="row st-${s.status} ${w.view === s.id ? "on" : ""} ${hov ? "hov" : ""}" data-row="${s.id}">
+    <div class="row-main"><span class="r-1">${shape(s)}<span class="r-name">${esc(s.name)}</span>${s.host === "outside" ? `<span class="r-badge">Terminal.app</span>` : ""}${w.muted.includes(s.id) ? `<span class="r-muted">${IC.bellOff}</span>` : ""}${nNew ? `<span class="r-new">${nNew} new</span>` : ""}<span class="r-time">${esc(sinceOf(w, s))}</span></span>
+    <span class="r-sub"><span class="r-st">${label}</span>${sub ? ` · ${esc(sub)}` : ""}</span></div>${qa}</div>`;
+}
+
+function list(w) {
+  const order = { needs_you: 0, ready: 1, working: 2, reviewed: 3 };
+  const claude = w.S.filter(s => s.kind === "claude" && s.host !== "outside").sort((a, b) => order[a.status] - order[b.status]);
+  const outside = w.S.filter(s => s.host === "outside");
+  const shells = w.S.filter(s => s.kind === "shell");
+  const total = w.events.filter(e => e.isNew && e.type !== "think").length;
+  return `<nav class="list">
+    <div class="l-all ${w.view === "feed" ? "on" : ""}"><span class="ico"><i></i><i></i><i></i></span>All activity${w.view === "feed" ? "" : `<span class="r-new">${w.badge || total} new</span>`}</div>
+    <div class="l-h">Claude <span class="c">${claude.length}</span></div>${claude.map(s => rowHTML(w, s)).join("")}
+    ${outside.length ? `<div class="l-h">Outside the app <span class="c">${outside.length}</span></div><p class="l-note">Seen through Claude Code hooks. Answer here; type in its own window.</p>${outside.map(s => rowHTML(w, s)).join("")}` : ""}
+    <div class="l-h">Terminals <span class="c">${shells.length}</span></div>${shells.map(s => rowHTML(w, s)).join("")}
+    <div class="l-h">Recently closed <span class="c">${w.closed.length}</span></div>
+    ${w.closed.map((c, i) => `<div class="closed-row ${w.closedHl === i ? "hl" : ""}">${c.kind === "claude" ? shapeSt("reviewed").replace("s-reviewed", "s-idle") : shapeSt("exited")}<span class="nm">${esc(c.name)}</span><span class="when">${esc(c.closed)}</span><span class="btn">${c.kind === "claude" ? "Resume" : "Reopen"}</span></div>`).join("")}
+  </nav>`;
+}
+
+function laneCard(w, s) {
+  if (s.status === "needs_you") {
+    const typing = w.typing[s.id];
+    return `<div class="wcard needs">
+      <div class="wc-top">${shape(s)}<span class="wc-kind">${s.ask.type === "permission" ? "Needs permission" : "Asked a question"}</span><span class="wc-t">${esc(s.since)}</span></div>
+      <div class="wc-name">${esc(s.name)}<small>${esc(s.dir)}</small></div>
+      <div class="wc-body">${askHTML(s.ask.text)}</div>
+      ${typing ? `<div class="inrow"><span class="field filled focus">${esc(typing)}<span class="caret"></span></span><span class="sendb">Send</span></div>` : `<div class="opts">${s.ask.options.map((o, i) => `<span class="opt ${i === 0 ? "first" : ""}">${esc(o)}</span>`).join("")}</div>`}
+    </div>`;
+  }
+  const last = s.lines.filter(l => !l.trim().startsWith("⎿") && !/^⏺ \w+\(/.test(l)).slice(-2).map(l => l.replace(/^⏺\s*/, "").trim()).join(" ");
+  const add = s.files.reduce((a, f) => a + f.add, 0), del = s.files.reduce((a, f) => a + f.del, 0);
+  return `<div class="wcard ready">
+    <div class="wc-top">${shape(s)}<span class="wc-kind">Ready for review</span><span class="wc-t">${esc(s.since)}</span></div>
+    <div class="wc-name">${esc(s.name)}<small>${esc(s.dir)}</small></div>
+    <div class="wc-msg">${esc(last)}</div>
+    <div class="wc-files">${s.files.length} files <span class="add">+${add}</span><span class="del">−${del}</span><span class="btn sm ok">Looks good</span></div>
+    <div class="inrow"><span class="field">Feedback for ${esc(s.name)}</span><span class="sendb">Send</span></div>
+  </div>`;
+}
+
+function evText(e) {
+  switch (e.type) {
+    case "tool": return `<span class="v">${VERB[e.tool] || e.tool}</span> <code>${esc(e.args)}</code>`;
+    case "say": return esc(e.text);
+    case "think": return `<span class="flag" style="color:var(--work)">Thinking</span> <span class="v">${esc(e.text.replace(/^Thinking…\s*/, ""))}</span>`;
+    case "perm": return `<span class="flag needs">Needs permission</span><span class="ev-q">${askHTML(e.text)}</span>${e.answer ? `<span class="ev-ans">${esc(e.answer)}</span>` : ""}`;
+    case "ask": return `<span class="flag needs">Asked</span><span class="ev-q">${esc(e.text)}</span>${e.answer ? `<span class="ev-ans">${esc(e.answer)}</span>` : ""}`;
+    case "done": return `<span class="flag ready">Finished its turn</span> <span class="v">ready for your review</span>`;
+    case "cmd": return `<span class="v">Ran</span> <code>${esc(e.text)}</code>`;
+    case "exit": return `<span class="flag needs">Exited</span> <span class="v">with code ${e.code}</span>`;
+    case "you": return `<span class="v">You ${esc(e.verb)}</span> “${esc(e.text)}”`;
+    case "life": return `<span class="flag">${esc(e.text)}</span>`;
+  }
+  return "";
+}
+
+function evRow(w, e, cont) {
+  const s = w.byId(e.sid) || { name: e.name || "closed", status: "idle", dir: "" };
+  const t = e.at;
+  const cls = [`k-${cat(e)}`, e.pending && s.status === "needs_you" ? "pending" : "", e.live && s.status === "ready" ? "live" : "", cont ? "cont" : "", e.isNew ? "new" : "", e.pinned ? "pinned" : "", w.evHover === e.key ? "hov" : ""].join(" ");
+  return `<div class="ev ${cls}">
+    <span class="ev-time"><b>${pad(t.getHours())}:${pad(t.getMinutes())}</b><span class="sec">:${pad(t.getSeconds())}</span></span>
+    <span class="ev-tag" style="--tag:${TAG[e.sid] || "#999"}">${shape(s)}<span class="nm">${esc(s.name)}</span></span>
+    <div class="ev-what"><span class="ev-kind">${kindLabel(e)}</span><span class="ev-text">${evText(e)}</span>${e.detail ? `<span class="ev-detail">${esc(e.detail)}</span>` : ""}</div>
+    <span class="ev-pin">${e.pinned ? IC.pinOn : IC.pin}</span>
+  </div>`;
+}
+
+function digestHTML(w) {
+  const seenAt = NOW - 15 * 60000;
+  const rows = w.S.map(s => {
+    const evs = w.events.filter(e => e.sid === s.id && e.at > seenAt && e.type !== "think");
+    if (!evs.length) return "";
+    const c = {}; evs.forEach(e => { const k = cat(e); c[k] = (c[k] || 0) + 1; });
+    const parts = [];
+    if (c.edit) parts.push(`${c.edit} edit${c.edit > 1 ? "s" : ""}`);
+    if (c.command) parts.push(`${c.command} command${c.command > 1 ? "s" : ""}`);
+    if (c.other && !c.edit && !c.command) parts.push(`${c.other} note${c.other > 1 ? "s" : ""}`);
+    const now = { needs_you: s.ask && s.ask.type === "permission" ? "waiting on a permission" : "waiting on your answer", ready: "ready for review", working: "still working", reviewed: "reviewed", process: "still running", idle: "at the prompt", exited: `exited with code ${s.exitCode}` }[s.status];
+    return `<div class="dg-row st-${s.status}">${shape(s)}<b>${esc(s.name)}</b><span>${parts.length ? parts.join(", ") + ", " : ""}<em>${now}</em></span></div>`;
+  }).join("");
+  return `<div class="digest"><div class="dg-head"><h3>Since you last looked</h3><span class="ago">15 min ago</span><span class="btn sm">Mark all seen</span></div><div class="dg-grid">${rows}</div></div>`;
+}
+
+function feedView(w) {
+  const waiting = w.S.filter(s => s.status === "needs_you").sort((a, b) => mins(b.since) - mins(a.since)).concat(w.S.filter(s => s.status === "ready"));
+  const visible = w.events.filter(e => e.type !== "think" || (w.byId(e.sid) || {}).status === "working");
+  const counts = { all: visible.length };
+  visible.forEach(e => { const k = cat(e); counts[k] = (counts[k] || 0) + 1; });
+  const chips = [["all", "All"], ["ask", "Asks"], ["edit", "Edits"], ["command", "Commands"], ["finished", "Finished"], ["you", "From you"]];
+  const filtered = visible.filter(e => w.filter === "all" || cat(e) === w.filter);
+  const pinned = filtered.filter(e => e.pinned);
+  const rest = filtered.filter(e => !e.pinned);
+  let prev = null;
+  const rows = rest.map(e => { const cont = prev === e.sid; prev = e.sid; return evRow(w, e, cont); }).join("");
+  return `<section class="lane">
+      <div class="lane-head"><h2>Waiting on you</h2><span class="n">${waiting.length}</span><span class="hint">Longest wait first</span></div>
+      <div class="lane-cards">${waiting.map(s => laneCard(w, s)).join("")}</div>
+    </section>
+    <div class="feedwrap">
+      ${w.noDigest ? "" : digestHTML(w)}
+      <div class="feed-tools"><h2>Activity</h2>${chips.map(([k, n]) => `<span class="chip ${w.filter === k ? "on" : ""}">${n}<span class="n">${counts[k] || 0}</span></span>`).join("")}<span class="live"><i></i>Live</span></div>
+      ${pinned.length ? `<div class="pinned-box"><div class="pinned-h">${IC.pinOn} Pinned</div>${pinned.map(e => evRow(w, e, false)).join("")}</div>` : ""}
+      <div class="evlist">${rows}</div>
+    </div>`;
+}
+
+function termLine(l, kind) {
+  if (kind === "shell") {
+    const i = l.indexOf("% ");
+    const cur = l.endsWith("█");
+    const txt = cur ? l.slice(0, -1) : l;
+    const tail = cur ? `<span class="tcaret"></span>` : "";
+    if (i > -1) return `<div><span class="l-prompt">${esc(txt.slice(0, i + 2))}</span>${esc(txt.slice(i + 2))}${tail}</div>`;
+    if (/^\[process/.test(l) || l === "^C") return `<div class="l-dim">${esc(l)}</div>`;
+    return `<div>${esc(txt)}${tail}</div>`;
+  }
+  if (l.startsWith("> ")) return `<div class="l-user">${esc(l)}</div>`;
+  if (l.startsWith("⏺ ")) {
+    const body = l.slice(2), m = /^(\w+)\((.*)\)$/.exec(body);
+    return `<div><span class="l-dot">⏺</span> ${m ? `<span class="l-tool">${esc(m[1])}</span><span class="l-args">(${esc(m[2])})</span>` : esc(body)}</div>`;
+  }
+  if (l.trim().startsWith("⎿")) return `<div class="l-res">${esc(l)}</div>`;
+  if (l.startsWith("✻")) return `<div class="l-think">${esc(l)}</div>`;
+  return `<div>${esc(l)}</div>`;
+}
+
+function promptOf(s) {
+  const l = [...s.lines].reverse().find(x => x.includes("% "));
+  return l ? l.slice(0, l.indexOf("% ") + 2) : "% ";
+}
+
+function sessionView(w, s) {
+  const isShell = s.kind === "shell", outside = s.host === "outside";
+  const label = s.status === "exited" ? `Exited · code ${s.exitCode}` : STATUS[s.status].label;
+  const acts = [];
+  acts.push(`<span class="btn icon" title="Notifications">${w.muted.includes(s.id) ? IC.bellOff : IC.bell}</span>`);
+  if (!outside) {
+    acts.push(`<span class="btn sm">Rename</span>`);
+    if (isShell) {
+      if (s.status === "process") acts.push(`<span class="btn sm">Stop<kbd>⌃C</kbd></span>`);
+      acts.push(`<span class="btn sm">Restart</span>`);
+      acts.push(`<span class="btn sm danger">${s.status === "exited" ? "Remove" : "Delete"}</span>`);
+    } else {
+      acts.push(`<span class="btn sm">Restart</span>`, `<span class="btn sm ${s.status === "working" ? "" : "off"}">Stop</span>`, `<span class="btn sm danger">Delete</span>`);
+    }
+  } else {
+    acts.push(`<span class="btn sm">Rename</span>`, `<span class="btn sm">Show its window</span>`);
+  }
+  const ctx = s.context || 0;
+  const meta = isShell
+    ? `<span class="m"><span class="k">In status</span><b>${esc(sinceOf(w, s))}</b></span>${s.command ? `<span class="m"><span class="k">Command</span><b>${esc(s.command)}</b></span>` : ""}<span class="m"><span class="k">Shell</span><b>zsh</b></span><span class="m"><span class="dir">${esc(s.dir)}</span><span class="lnk">Open in Finder</span><span class="lnk">Copy path</span></span>`
+    : `<span class="m"><span class="k">In status</span><b>${esc(sinceOf(w, s))}</b></span>
+       <span class="m"><span class="k">Total</span><b>${esc(s.started)}</b></span>
+       <span class="m"><span class="k">Context</span><span class="meter ${ctx >= 80 ? "hot" : ""}"><i style="width:${ctx}%"></i></span><b>${ctx}%</b>${ctx >= 80 ? `<span style="color:var(--needs)">near limit</span>` : ""}</span>
+       <span class="m"><span class="k">Cost</span><b>${esc(s.cost)}</b></span>
+       <span class="m"><span class="k">Mode</span>${outside ? `<b>${esc(s.mode)}</b>` : `<span class="sel">${esc(s.mode)}</span>`}</span>
+       <span class="m"><span class="dir">${esc(s.dir)}</span><span class="lnk">Open in Finder</span><span class="lnk">Copy path</span></span>`;
+  let lines = s.lines.slice();
+  if (w.tail) lines = lines.slice(-w.tail);
+  let term = lines.map(l => termLine(l, s.kind)).join("");
+  if (!isShell && s.status === "working" && !lines[lines.length - 1].startsWith("✻")) term += `<div class="l-think">✻ Working… (${esc((w.timer[s.id] || "0:06").replace(/^0:0?/, ""))}s · esc to interrupt)</div>`;
+  let cmd = "";
+  if (isShell) {
+    if (s.status === "process") cmd = `<div class="cmdline"><span class="muted">${esc(s.command)} is running. Stop it to get a prompt back.</span><span class="tbtn warn">Stop (⌃C)</span></div>`;
+    else if (s.status === "exited") cmd = `<div class="cmdline"><span class="muted">Process exited with code ${s.exitCode}.</span><span class="tbtn">Restart</span><span class="tbtn">Remove</span></div>`;
+    else cmd = `<div class="cmdline"><span class="pfx">${esc(promptOf(s))}</span><span class="txt">${esc(w.compose[s.id] || "")}<span class="tcaret"></span></span></div>`;
+  }
+  let bottom = "";
+  if (!isShell) {
+    const typed = w.compose[s.id];
+    const composer = (ph, focus) => `<div class="composer ${focus ? "focus" : ""}"><div class="cmp-text ${typed ? "filled" : ""}">${typed ? esc(typed) + '<span class="caret"></span>' : esc(ph)}</div><div class="cmp-foot"><span class="hint">⏎ send · ⇧⏎ new line${s.status === "working" ? " · Esc interrupts" : ""}</span><span class="btn sm primary">Send</span></div></div>`;
+    if (s.status === "needs_you" && s.ask) {
+      const typing = w.typing[s.id];
+      bottom += `<div class="askp"><div class="askp-k">${shape(s)}${s.ask.type === "permission" ? "Needs permission" : "Asked a question"}<span class="t">waiting ${esc(s.since)}</span></div>
+        <div class="askp-q">${askHTML(s.ask.text)}</div>
+        <div class="opts">${s.ask.options.map((o, i) => `<span class="opt ${i === 0 && !typing ? "first" : ""} ${typing && o === "Type an answer" ? "pressed" : ""}">${esc(o)}<kbd>${i + 1}</kbd></span>`).join("")}<span class="askp-foot">${outside ? "Your answer is relayed to its Terminal.app window" : "Press 1–3 to choose"}</span></div>
+        ${typing !== undefined ? `<div class="inrow"><span class="field filled focus">${esc(typing)}<span class="caret"></span></span><span class="sendb">Send answer</span></div>` : ""}</div>`;
+    } else if (s.status === "ready") {
+      const add = s.files.reduce((a, f) => a + f.add, 0), del = s.files.reduce((a, f) => a + f.del, 0);
+      bottom += `<div class="review"><div class="rv-head">${shape(s)}<b>Review this turn</b><span class="sum">${s.files.length} file${s.files.length === 1 ? "" : "s"} changed · <span class="add">+${add}</span> <span class="del">−${del}</span></span><span class="btn sm ok">Looks good</span></div>
+        <div class="rv-files">${s.files.map(f => `<div><span class="p">${esc(f.path)}</span>${f.binary ? `<span class="bin">binary</span>` : `<span class="add">+${f.add}</span><span class="del">−${f.del}</span>`}</div>`).join("")}</div>
+        ${outside ? "" : composer(`Feedback for ${s.name}`, !!typed)}</div>`;
+    } else if (!outside) {
+      bottom += composer(`Message ${s.name}`, !!typed);
+    }
+    if (outside) bottom += `<div class="note">Typing to scheduler happens in its Terminal.app window.<span class="btn sm">Show its window</span></div>`;
+  }
+  return `<div class="sv">
+    <div class="sv-bar"><span class="back">All activity${w.badge ? `<span class="r-new">${w.badge} new</span>` : ""}</span>
+      <div class="sv-title">${shape(s)}${w.renaming === s.id ? `<span class="rename">${esc(s.name)}<span class="caret"></span></span>` : `<h2>${esc(s.name)}</h2>`}<span class="pill st-${s.status}">${label} · <span class="tm">${esc(sinceOf(w, s))}</span></span>${outside ? `<span class="r-badge">Terminal.app</span>` : ""}</div>
+      <div class="sv-acts">${acts.join("")}</div></div>
+    <div class="sv-meta">${meta}</div>
+    ${outside ? `<div class="outside">${shapeSt("idle")}<span><b>Running outside the app.</b> scheduler was started in Terminal.app. The app sees it through Claude Code hooks, so you can answer its prompts here but can't type to, restart or stop it.</span></div>` : ""}
+    <div class="termbox"><div class="term">${term}</div>${cmd}</div>
+    ${bottom ? `<div class="bottom">${bottom}</div>` : ""}
+  </div>`;
+}
+
+function tray(w) {
+  const shells = w.S.filter(s => s.kind === "shell");
+  return `<aside class="tray"><div class="tray-h">Terminals <span style="font-family:var(--mono);font-weight:400">${shells.length}</span></div>` + shells.map(s => {
+    const open = w.open.includes(s.id);
+    const last = s.lines[s.lines.length - 1].replace("█", "");
+    const label = s.status === "exited" ? `Exited · code ${s.exitCode}` : STATUS[s.status].label;
+    let body = "";
+    if (open) {
+      body = `<div class="term">${s.lines.slice(s.status === "idle" ? -5 : -3).map(l => termLine(l, "shell")).join("")}</div>`;
+      if (s.status === "idle") body += `<div class="cmdline"><span class="pfx">%</span><span class="txt">${esc(w.compose[s.id] || "")}<span class="tcaret"></span></span></div>`;
+      else if (s.status === "process") body += `<div class="tsh-acts"><span class="btn sm">Stop (⌃C)</span><span class="lnk">Open full</span></div>`;
+      else body += `<div class="tsh-acts"><span class="btn sm">Restart</span><span class="btn sm danger">Remove</span><span class="lnk">Open full</span></div>`;
+    }
+    return `<div class="tsh ${open ? "open" : ""}"><div class="tsh-head">${shape(s)}<span class="nm">${esc(s.name)}</span><span class="st"><b>${label}</b> · ${esc(s.since)}</span></div>${open ? "" : `<span class="tsh-last">${esc(last)}</span>`}${body}</div>`;
+  }).join("") + `<div class="tray-new">New terminal</div></aside>`;
+}
+
+function newModal(step) {
+  const st = n => n < step ? "done" : n === step ? "cur" : "todo";
+  const s1 = step === 1
+    ? `<div class="seg2"><div class="on"><b>Claude session</b><span>Claude Code in a folder</span></div><div><b>Terminal</b><span>Plain zsh shell</span></div></div>`
+    : "";
+  const s2 = step === 2
+    ? `<div class="dirs">${TM.recentDirs.map((d, i) => `<span class="${i === 1 ? "on" : ""}">${esc(d)}</span>`).join("")}</div><div class="pathf">~/work/chess-app/app<span class="ok">Folder exists</span></div>`
+    : "";
+  const s3 = step === 3
+    ? `<div class="ta">Add a --depth flag to the analyzer CLI and cover it with tests<span class="caret"></span></div>
+       <div class="stp-h" style="margin-bottom:6px">Permission mode</div>
+       <div class="modes">${TM.permissionModes.map((m, i) => `<div class="${i === 1 ? "on" : ""}"><i></i>${esc(m)}<span>${["Asks before every change", "Edits freely, asks for commands", "Reads and plans, changes nothing"][i]}</span></div>`).join("")}</div>`
+    : "";
+  return `<div class="scrim"><div class="modal">
+    <h2>New session<kbd>⌘N</kbd></h2>
+    <div class="stp ${st(1)}"><div class="stp-h"><span class="n">${step > 1 ? "✓" : "1"}</span>Kind${step > 1 ? `<span class="val">Claude session</span>` : ""}</div>${s1}</div>
+    <div class="stp ${st(2)}"><div class="stp-h"><span class="n">${step > 2 ? "✓" : "2"}</span>Directory${step > 2 ? `<span class="val">~/work/chess-app/app</span>` : ""}</div>${s2}</div>
+    <div class="stp ${st(3)}"><div class="stp-h"><span class="n">3</span>First prompt <span style="font-weight:400;color:var(--ink3)">optional</span></div>${s3}</div>
+    <div class="modal-foot"><span class="btn">Cancel</span><span class="btn primary">${step < 2 ? "Next" : step < 3 ? "Next" : "Create session"}</span></div>
+  </div></div>`;
+}
+
+function deleteModal(s) {
+  return `<div class="scrim"><div class="modal delm">
+    <h2>Delete ${esc(s.name)}?</h2>
+    <p class="sub">Ends the process. Claude sessions can be resumed later from Recently closed.</p>
+    <div class="what">${shape(s)}<b>${esc(s.name)}</b><code>${esc(s.dir)}</code></div>
+    <div class="modal-foot"><span class="btn">Cancel</span><span class="btn danger-fill">End and delete</span></div>
+  </div></div>`;
+}
+
+function screen(w) {
+  const s = w.view !== "feed" && w.byId(w.view);
+  const toasts = w.toasts.length ? `<div class="toasts">${w.toasts.map(t => `<div class="toast">${t.shape ? shapeSt(t.shape) : ""}<span>${t.html}</span>${t.action ? `<span class="tb">${t.action}</span>` : ""}<span class="x">✕</span></div>`).join("")}</div>` : "";
+  return `<div class="scr" data-style="${w.style}"><div class="app">${header(w)}<div class="body">${list(w)}<main class="center">${s ? sessionView(w, s) : feedView(w)}</main>${tray(w)}</div></div>${toasts}${w.modal || ""}</div>`;
+}
+
+function paneBox(w, sid, width, height) {
+  const s = w.byId(sid);
+  return `<div class="scr" data-style="${w.style}" style="width:${width}px;height:${height}px;display:flex;flex-direction:column">${sessionView(w, s)}</div>`;
+}
+
+const frames = [];
+function mount(id, html, opts) {
+  const host = typeof id === "string" ? document.getElementById(id) : id;
+  const f = document.createElement("div");
+  f.className = "frame";
+  f.innerHTML = `<div class="fin">${html}</div>`;
+  host.appendChild(f);
+  frames.push({ f, opts: opts || {} });
+  return f;
+}
+
+function layout() {
+  frames.forEach(({ f, opts }) => {
+    const fin = f.firstElementChild;
+    fin.style.transform = "none";
+    f.style.width = ""; f.style.height = "";
+    const inner = fin.firstElementChild;
+    let x = 0, y = 0, w = inner.offsetWidth, h = inner.offsetHeight;
+    if (opts.sel) {
+      const base = inner.getBoundingClientRect();
+      const r = inner.querySelector(opts.sel).getBoundingClientRect();
+      const p = opts.pad || 0;
+      x = Math.max(0, r.left - base.left - p); y = Math.max(0, r.top - base.top - p);
+      w = Math.min(inner.offsetWidth - x, r.width + p * 2 + (opts.extraW || 0)); h = Math.min(inner.offsetHeight - y, r.height + p * 2 + (opts.extraH || 0));
+    }
+    if (opts.rect) [x, y, w, h] = opts.rect;
+    const avail = f.parentElement.clientWidth;
+    const k = Math.min(opts.maxScale || 1, avail / w);
+    f.style.width = `${w * k}px`;
+    f.style.height = `${h * k}px`;
+    if (opts.callouts) {
+      f.querySelectorAll(".callout,.callbox").forEach(n => n.remove());
+      const base = inner.getBoundingClientRect();
+      opts.callouts.forEach(c => {
+        const el = inner.querySelector(c.sel);
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const bx = r.left - base.left, by = r.top - base.top;
+        const box = document.createElement("div");
+        box.className = "callbox";
+        Object.assign(box.style, { left: `${(bx - 3 - x) * k}px`, top: `${(by - 3 - y) * k}px`, width: `${(r.width + 6) * k}px`, height: `${(r.height + 6) * k}px` });
+        const dot = document.createElement("div");
+        dot.className = "callout";
+        dot.textContent = c.n;
+        const [dx, dy] = c.at || [0, 0];
+        Object.assign(dot.style, { left: `${Math.max(2, (bx - x + dx) * k - 15)}px`, top: `${Math.max(2, (by - y + dy) * k - 15)}px` });
+        f.append(box, dot);
+      });
+    }
+    if (opts.cursorSel) {
+      f.querySelectorAll(".cursor").forEach(n => n.remove());
+      const base = inner.getBoundingClientRect();
+      const r = inner.querySelector(opts.cursorSel).getBoundingClientRect();
+      const c = document.createElement("div");
+      c.className = "cursor";
+      c.innerHTML = '<svg viewBox="0 0 18 22" width="18" height="22"><path d="M1 1v17l4.5-4 3 7 3-1.3-3-6.7H15Z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+      Object.assign(c.style, { left: `${(r.left - base.left - x + r.width * .55) * k}px`, top: `${(r.top - base.top - y + r.height * .45) * k}px` });
+      f.appendChild(c);
+    }
+    fin.style.transform = `scale(${k}) translate(${-x}px,${-y}px)`;
+  });
+}
+
+const main = world();
+mount("f-main", screen(main), {
+  callouts: [
+    { n: 1, sel: ".tally", at: [-8, -6] },
+    { n: 2, sel: "[data-c=next]", at: [-6, -6] },
+    { n: 3, sel: "[data-c=dnd]", at: [-6, -6] },
+    { n: 4, sel: ".list .row", at: [-4, -4] },
+    { n: 5, sel: ".list .l-note", at: [-8, -8] },
+    { n: 6, sel: ".list .closed-row", at: [-6, -6] },
+    { n: 7, sel: ".lane-head", at: [-8, -4] },
+    { n: 8, sel: ".digest", at: [-8, -8] },
+    { n: 9, sel: ".feed-tools", at: [-8, -6] },
+    { n: 10, sel: ".pinned-box", at: [-8, -6] },
+    { n: 11, sel: ".evlist .ev", at: [-8, -6] },
+    { n: 12, sel: ".tray .tsh.open", at: [-6, -6] }
+  ]
+});
+const LEGEND = [
+  ["Status counts", "Need you, ready, working and running, each with its status shape. Always visible, so you know the backlog before you look anywhere else."],
+  ["Next needing you (⌘J)", "Opens the session that has waited longest for you; repeat to walk the queue. Needs-you first, then ready."],
+  ["Do not disturb, New session, styling", "DND silences toasts globally. New session (⌘N) opens the create sheet. The segmented control switches Lavender / Log / Slate."],
+  ["Session list", "Every session with a status shape and word, elapsed time, a one-line summary and a count of unseen events. Click to open its full view; hover a needs-you row to answer in place."],
+  ["Outside the app", "Sessions started in Terminal.app, discovered through hooks. A note says what works here (answering) and what doesn't (typing)."],
+  ["Recently closed", "Deleted sessions wait here. Claude ones can be resumed with their conversation; terminals reopen fresh in the same folder."],
+  ["Waiting on you lane", "Pinned above the feed so blocking items never scroll away. Answer permissions and questions, or review a finished turn, right from the card."],
+  ["Since you last looked", "A roll-up of what each session did while you were away and what it's doing now. Its own feature, described below."],
+  ["Event-type filters", "Narrow the stream to asks, edits, commands, finished turns or your own messages. Counts update live."],
+  ["Pinned events", "Lines you chose to keep at the top, like a preview URL. Hover any event to pin it."],
+  ["The feed", "Every session's tool calls, notes, asks and finished turns, newest first. Consecutive events from one session group under one name; asks still pending are tinted."],
+  ["Terminal tray", "Plain zsh shells, collapsed to their last line. Expand one for its output and a live command line, or open it full size in the centre."]
+];
+document.getElementById("legend").innerHTML = LEGEND.map(([t, d], i) => `<div><span class="bd-num" style="background:#E8590C">${i + 1}</span><p><b>${t}</b>${d}</p></div>`).join("");
+
+mount("f-qa", screen(world({ hover: "c1" })), { rect: [0, 56, 264, 470], cursorSel: ".list .row.hov .r-name" });
+mount("f-perm", paneBox(world({ view: "c1", badge: 2 }), "c1", 872, 500));
+
+mount("f-question", paneBox(world({ view: "c2", typing: { c2: "8:00, but skip weekends" }, tail: 3 }), "c2", 872, 430));
+
+const talkBase = (mut, over) => world(Object.assign({ view: "c4", tail: 6 }, over || {}), mut);
+mount("f-talk1", paneBox(talkBase(null, { compose: { c4: "Tighten the card copy to two lines" } }), "c4", 872, 520));
+mount("f-talk2", paneBox(talkBase(w => {
+  const s = w.S.find(x => x.id === "c4");
+  s.status = "working"; s.lines.push("> Tighten the card copy to two lines");
+}, { timer: { c4: "0:06" }, badge: 1, extra: [] }), "c4", 872, 400));
+mount("f-talk3", paneBox(talkBase(w => {
+  const s = w.S.find(x => x.id === "c4");
+  s.lines.push("> Tighten the card copy to two lines", ...s.reply);
+  s.since = "0:02";
+}, { badge: 4, timer: { c4: "2s" }, tail: 7 }), "c4", 872, 330).replace('<div class="bottom">', '<div class="bottom" style="display:none">'), {});
+
+mount("f-review", paneBox(world({ view: "c4", tail: 4 }), "c4", 872, 590));
+
+mount("f-shell", paneBox(world({ view: "t1" }), "t1", 820, 330));
+mount("f-tray", screen(world({ open: ["t2", "t4"], compose: { t2: "git status" } })), { rect: [1136, 56, 304, 615] });
+
+[1, 2, 3].forEach(n => {
+  const cell = document.createElement("div");
+  document.getElementById("f-new").appendChild(cell);
+  mount(cell, screen(world({ modal: newModal(n) })), { sel: ".modal", pad: 18 });
+  const cap = document.createElement("p");
+  cap.className = "bd-cap";
+  cap.innerHTML = ["<b>1 · Kind.</b> Claude session or Terminal. Two big targets; Next is the default action.", "<b>2 · Directory.</b> Recent folders as chips, or type a path. It checks the folder exists as you type.", "<b>3 · First prompt and mode.</b> Optional prompt; Accept edits chosen here. Create opens the session already working."][n - 1];
+  cell.appendChild(cap);
+});
+
+const delW = world({ view: "c1" });
+mount("f-delete", screen(Object.assign(delW, { modal: deleteModal(delW.byId("c1")) })), { sel: ".modal", pad: 70 });
+mount("f-closed", screen(world({ closedHl: 0 }, w => {
+  const i = w.S.findIndex(s => s.id === "c1");
+  w.S.splice(i, 1);
+  w.closed.unshift({ kind: "claude", name: "api-server", dir: "~/work/api-server", closed: "just now", lastLine: "Waiting for permission" });
+})), { rect: [0, 540, 264, 360] });
+
+mount("f-outside", paneBox(world({ view: "c6" }), "c6", 872, 520));
+
+mount("f-header", screen(world({ dnd: false })), { rect: [700, 0, 740, 56] });
+mount("f-toast", screen(world({ toasts: [
+  { shape: "ready", html: "<b>web-app</b> is ready for review", action: "Open" },
+  { shape: "needs_you", html: "<b>scheduler</b> needs permission to edit a file", action: "Answer" }
+] })), { rect: [264, 700, 600, 200] });
+const bellCell = document.createElement("div");
+bellCell.style.marginTop = "18px";
+document.getElementById("f-toast").appendChild(bellCell);
+mount(bellCell, paneBox(world({ view: "c3", muted: ["c3"], tail: 2 }), "c3", 872, 120));
+
+const STYLES = [
+  { k: "a", name: "Lavender", tag: "Light, soft, the round-1 look refined",
+    sw: [["Background", "#F3F2F8"], ["Card", "#FFFFFF"], ["Ink", "#22212B"], ["Line", "#E3E1EC"], ["Needs you", "#D9480F"], ["Working", "#3B5BDB"], ["Ready", "#862E9C"], ["Reviewed", "#2B8A3E"]],
+    type: [["Instrument Sans", "var(--sans)", "UI, 13.5px base"], ["JetBrains Mono", "'JetBrains Mono'", "Transcripts, times, paths"]],
+    notes: ["Comfortable density: feed events are small cards with 5px gaps, details on a second line in mono.", "10px corners, hairline borders, a 3px status edge on lane cards. Terminals are dark islands in a light page.", "Pick it for all-day use at a normal distance: calm, low contrast between surfaces, colour reserved for status."] },
+  { k: "b", name: "Log", tag: "Dark, dense, one event per line",
+    sw: [["Base", "#101114"], ["Panel", "#0D0E11"], ["Ink", "#D5D8DE"], ["Line", "#22252B"], ["Needs you", "#FF8F57"], ["Working", "#82A6FF"], ["Ready", "#CC9CFF"], ["Session tags", "#7AA2F7 · #F7768E · #9ECE6A …"]],
+    type: [["JetBrains Mono", "'JetBrains Mono'", "Everything, 12px base"]],
+    notes: ["The feed becomes a log stream: fixed time column with seconds, session name in its own colour, a short kind word (edit, run, ask, done), then the line and its result after ⎿.", "The lane turns into rows instead of cards, so the screen fits twice as many events. 3–4px corners, almost no fills, no shadows.", "Pick it if you live in terminals and want to read the whole room at once; it rewards scanning, not browsing."] },
+  { k: "c", name: "Slate", tag: "High contrast, big type, thick status edges",
+    sw: [["Background", "#E6E9EE"], ["Card", "#FFFFFF"], ["Ink", "#0F172A"], ["Line", "#CBD2DC"], ["Needs you", "#C2410C"], ["Working", "#1D4ED8"], ["Ready", "#7E22CE"], ["Reviewed", "#15803D"]],
+    type: [["Instrument Sans", "var(--sans)", "UI, 15px base, 700 for names"], ["JetBrains Mono", "'JetBrains Mono'", "13.5px in terminals"]],
+    notes: ["Every row, card and event has a 6px status edge, so the state of the room reads as stripes of colour from across the desk.", "Larger type throughout, bold names, white cards on cool grey, kind badges (edit, ask, done) in tinted pills. Wider side columns.", "Pick it for a big second monitor you glance at while doing something else; less fits, but nothing needs squinting."] }
+];
+document.getElementById("styles").innerHTML = STYLES.map(st => `<div class="bd-style">
+  <div class="bd-style-head"><span class="bd-h3">${st.k} · ${st.name}</span><span>${st.tag}</span></div>
+  <div id="st-${st.k}"></div>
+  <div class="bd-style-body">
+    <div><div class="bd-swatches">${st.sw.map(([n, h]) => `<div class="bd-sw"><i style="background:${h.startsWith("#") && !h.includes("·") ? h : "linear-gradient(90deg,#7AA2F7 0 25%,#F7768E 25% 50%,#9ECE6A 50% 75%,#E0AF68 75%)"}"></i><span><b>${n}</b><code>${h}</code></span></div>`).join("")}</div>
+      <div class="bd-type">${st.type.map(([n, f, u]) => `<div><span class="sample" style="font-family:${f === "var(--sans)" ? "'Instrument Sans'" : f}">${n}</span>${u}</div>`).join("")}</div></div>
+    <div class="bd-text">${st.notes.map(n => `<p>${n}</p>`).join("")}</div>
+  </div></div>`).join("");
+STYLES.forEach(st => mount(`st-${st.k}`, screen(world({ style: st.k }))));
+
+mount("f-digest", screen(world()), { sel: ".digest", pad: 10 });
+mount("f-pins", screen(world({ filter: "all", evHover: "c3:2", pins: ["c4:2", "c6:0"] })), { sel: ".feed-tools", pad: 14, extraH: 330 });
+
+function boot() { layout(); }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(boot); else boot();
+boot();
+window.addEventListener("resize", layout);
+</script>
+</body>
+</html>
